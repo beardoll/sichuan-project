@@ -71,6 +71,21 @@ end
 hold off;
 k_demand
 
+% dist = zeros(datanum*K,1);
+% for i = 1:length(dist)
+%     clusterindex = floor(i/datanum)+1;
+%     if i - (clusterindex-1)*datanum == 0
+%         clusterindex = clusterindex - 1;
+%     end
+%     num = i - (clusterindex-1)*datanum;
+%     datax = dataset(num,1);
+%     datay = dataset(num,2);
+%     dist(i) = sqrt((datax-center(clusterindex,1))^2+(datay-center(clusterindex,2))^2);
+% end
+% dist;
+% results = FCM(dist,K,capacity,demand);
+
+
 
  
         
