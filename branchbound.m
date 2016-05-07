@@ -13,6 +13,7 @@ end
 
 function [min_spot] = mincost(impose)
     % 从impose中找出代价最小的子节点
+    design ... 
     
     
     
