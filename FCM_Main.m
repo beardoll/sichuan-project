@@ -6,8 +6,8 @@ yrange = 100;
 capacity = 32;
 
 load dataset;
-load demand;
-datanum = size(dataset, 1);
+linehaulnum = length(datasetLx);
+backhaulnum = length(datasetBx);
 
 % for i = 1:K
 %     center(i,1) = rand * 33+33*(i-1);
