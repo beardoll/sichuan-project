@@ -1,91 +1,43 @@
-K = 3;
-center = zeros(K,2);
-xrange = 100;
-yrange = 100;
-capacity = 32;
+function [u_final] = cluster(center_ini, demand, samplex, sampley, cluster_num, capacity, option)
+    % center_ini: 簇首的初始位置
+    % demand:各个数据点的货物需求
+    % samplex, sampley: 数据点的x，y坐标
+    % option: 分簇模式，1表示整数规划，2表示无负载约束FCM，3表示有负载约束FCM
+    % 返回隶属矩阵u
 
-load dataset;
-load demand;
-datanum = size(dataset, 1);
-
-for i = 1:K
-    center(i,1) = rand * 33+33*(i-1);
-    center(i,2) = rand * yrange;
-end
-
-epsilon = 0.01;
-gap = 2;
-type = zeros(datanum,1);
-iter = 1;
-
-while gap >= epsilon
-    for i = 1:datanum
-        datax = dataset(i,1);
-        datay = dataset(i,2);
-        mindist = inf;
-        for j = 1:K
-            currentdist = sqrt((datax - center(j,1))^2+(datay - center(j,2))^2);
-            if currentdist < mindist
-                mindist = currentdist;
-                type(i) = j;
+    datanum = length(samplex);    % 数据点的数量
+    K = cluster_num;              % 分簇的数量
+    epsilon = 10^(-4);
+    gap = 1;
+    center = center_ini;   
+    
+    while gap > epsilon 
+        dist = zeros(datanum*K,1);   % 各数据点到簇心的距离
+        for i = 1:length(dist)
+            clusterindex = floor(i/datanum)+1;  % 当前簇首编号
+            if i - (clusterindex-1)*datanum == 0
+                clusterindex = clusterindex - 1;
             end
+            num = i - (clusterindex-1)*datanum;   % 数据点的位置
+            dist(i) = (samplex(num)-center(clusterindex,1))^2+(sampley(num)-center(clusterindex,2))^2;
+        end   
+        K;
+        switch option
+            case 1
+                u_new = FCM_integer(datanum, dist,K, capacity, demand);
+            case 2
+                u_new = FCM_noconstraint(datanum, K, dist);
+            case 3             
+                u_new = FCM_inner(dist,C,capacity,demand);
         end
+        u = u_new;
+        newcenter = zeros(K,2);
+        for i = 1:K
+            newcenter(i,1) = sum(u((i-1)*datanum+1:i*datanum).^2.*samplex)/sum(u((i-1)*datanum+1:i*datanum).^2);
+            newcenter(i,2) = sum(u((i-1)*datanum+1:i*datanum).^2.*sampley)/sum(u((i-1)*datanum+1:i*datanum).^2);
+        end
+        gap = sum(sum((center-newcenter).^2));
+        center = newcenter;
     end
-    newcenter = zeros(K,2);
-    sumation = zeros(K,2);
-    count = zeros(K,1);
-    k_demand = zeros(K,1);
-    for i = 1:datanum
-        tt = type(i);
-        k_demand(tt) = k_demand(tt)+demand(i);
-        sumation(tt,1) = sumation(tt,1) + dataset(i,1);
-        sumation(tt,2) = sumation(tt,2) + dataset(i,2);
-        count(tt) = count(tt)+1;
-    end
-    gap = 0;
-    for i = 1:K
-        newcenter(i,1) = sumation(i,1)/count(i);
-        newcenter(i,2) = sumation(i,2)/count(i);
-        gap = gap + sqrt((newcenter(i,1)-center(i,1))^2+(newcenter(i,1)-center(i,1))^2);
-        center(i,1) = newcenter(i,1);
-        center(i,2) = newcenter(i,2);
-    end
+    u_final = u;
 end
-for i = 1:datanum
-    switch type(i)
-        case 1  
-            plot(dataset(i,1),dataset(i,2),'ro');
-            axis([0 100 0 100]);
-            hold on;            
-        case 2 
-            plot(dataset(i,1),dataset(i,2),'go');
-            hold on;
-        case 3 
-            plot(dataset(i,1),dataset(i,2),'bo');
-            hold on;
-    end
-end
-for i = 1:K
-    plot(center(i,1),center(i,2),'k*');
-end
-hold off;
-k_demand
-
-% dist = zeros(datanum*K,1);
-% for i = 1:length(dist)
-%     clusterindex = floor(i/datanum)+1;
-%     if i - (clusterindex-1)*datanum == 0
-%         clusterindex = clusterindex - 1;
-%     end
-%     num = i - (clusterindex-1)*datanum;
-%     datax = dataset(num,1);
-%     datay = dataset(num,2);
-%     dist(i) = sqrt((datax-center(clusterindex,1))^2+(datay-center(clusterindex,2))^2);
-% end
-% dist;
-% results = FCM(dist,K,capacity,demand);
-
-
-
- 
-        
