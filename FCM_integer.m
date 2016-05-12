@@ -4,7 +4,7 @@ function [u_new] =FCM_integer(datanum, dist,K,capacity,demand)
     f = dist'*ux;
     F = [ux>=0];
     temp = diag(ones(1,datanum));
-    A = [temp temp temp];
+    A = repmat(temp,1,K);
     b = ones(datanum,1);
     F = F+[A*ux==b];
     for j = 1:K

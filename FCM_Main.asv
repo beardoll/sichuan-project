@@ -9,26 +9,19 @@ KL = 5;
 KB = 3;
 
 %% 对Linehaul和Backhaul进行分簇
+range = [0 100 30 100];
 Lx = datasetLx;
 Ly = datasetLy;
 Bx = datasetBx;
 By = datasetBy;
-
-% 初始化簇首
-range = [0 100 30 100];
 rowDiv = 4;
 colDiv = 2;
+
+% 初始化簇首
 [CHL, CHB] = detectOriginalValue(range, rowDiv, colDiv, Lx, Ly, Bx, By, KL, KB);
 
 % 分别分簇
-[uL] = cluster(CHL, demandL, Lx, Ly, KL, capacity, 1);
-% cluster(center_ini, demand, samplex, sampley, cluster_num, capacity, option)
-% center_ini: 簇首的初始位置
-% demand:各个数据点的货物需求
-% samplex, sampley: 数据点的x，y坐标
-% option: 分簇模式，1表示整数规划，2表示无负载约束FCM，3表示有负载约束FCM
-% 返回隶属矩阵u
-% [uB] = cluster(CHB, demandB, Bx, By, KB, capacity, 1);
+[uL_final] = cluster(CHL, demandL, Lx, Ly, KL, capacity, 1);
 
 %% 针对Linehaul和Backhaul进行配对，形成簇
 
@@ -36,6 +29,12 @@ colDiv = 2;
 
 
 
+
+
+
+
+
+% cluster(center_ini, demand, samplex, sampley, cluster_num, capacity, option)
 
 
 % allocation

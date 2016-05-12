@@ -2,7 +2,15 @@ function [assignment] = AP(costMat)
     n = size(costMat, 1);   % 矩阵的阶数
     p = costMat;            % 规约矩阵
     unique_zero = 0;
-    while unique_zero < n   % 当找到n个独立的零元素时，算法阶数
+    % 行规约
+    for i = 1:n
+        p(i,:) = p(i,:) - min(p(i,:));
+    end
+    % 列规约
+    for i = 1:n
+        p(i,:) = p(i,:) - min(p(i,:));
+    end
+    while 1   % 当找到n个独立的零元素时，算法阶数
         % 求解指派问题
         % 匈牙利算法
         row = zeros(1,n);       % 每一行的0元素个数
@@ -12,15 +20,6 @@ function [assignment] = AP(costMat)
         x = zeros(1,n);         % 划线时是否被打勾，1是0不是
         y = zeros(1,n);         % 划线时是否被打勾，1是0不是
         unique_zero = 0;        % 独立零元素的个数
-
-        % 行规约
-        for i = 1:n
-            p(i,:) = p(i,:) - min(p(i,:));
-        end
-        % 列规约
-        for i = 1:n
-            p(i,:) = p(i,:) - min(p(i,:));
-        end
         
        %% 试指派
         % 找出未被划线的含0元素最少的行/列
@@ -93,7 +92,7 @@ function [assignment] = AP(costMat)
                     % 记得更新row和col
                     zero_of_col = find(p(index,:) == 0); % 在划线的行中零元素所在的列
                     col(zero_of_col) = col(zero_of_col) - 1;
-                    zero_of_row = find(p(:,index2) == 0)  % 在划线的列中零元素所在的列
+                    zero_of_row = find(p(:,index2) == 0);  % 在划线的列中零元素所在的行
                     row(zero_of_row) = row(zero_of_row) - 1;
                 end
             end
@@ -105,6 +104,10 @@ function [assignment] = AP(costMat)
         temp(zeropos) = temp(zeropos) + 1;
         temp = reshape(temp,n,n);
         r = temp;
+        
+        if unique_zero == n   % 找到了足够多的独立0的个数
+            break;
+        end
 
         %% 画最小盖0线
         % 对没有独立0元素的行打勾
@@ -116,39 +119,43 @@ function [assignment] = AP(costMat)
         % 对打勾的行所含0元素的列打勾
         stop = 0;
         while stop == 0
+            stop = 1;
             row_mark = find(x == 1);   % 标记要打勾的行
             for i = 1:length(row_mark)
                 zeropos = find(p(row_mark(i),:) == 0);
-                if(length(find(y(zeropos) == 1)) == length(zeropos))  % 没有可以打勾的列
-                    stop = 1;
-                else
+                if(length(find(y(zeropos) == 1)) ~= length(zeropos))  % 没有可以打勾的列
                     y(zeropos) = 1;
+                    stop = 0;
                 end
             end
             col_mark = find(y==1);     % 标记要打勾的列
             % 对所有打勾的列中所含独立0元素的行打勾
             for i = 1:length(col_mark)
                 uniquepos = find(r(:,col_mark(i)) == 2);
-                if length(find(x(uniquepos)==1)) == length(uniquepos)  % 没有可以打勾的行
-                    stop = 1;
-                else
+                if length(find(x(uniquepos)==1)) ~= length(uniquepos)  % 没有可以打勾的行
                     x(uniquepos) = 1;
+                    stop = 0;
                 end
             end
         end
         % 对打勾的列和没有打勾的行划线，那就是最小盖0线
 
-        %% 更新矩阵
-        row_not_draw = find(x==0);   % 没被划线的行
+       %% 更新矩阵
+        row_not_draw = find(x==1);   % 没被划线的行
         col_not_draw = find(y==0);   % 没被划线的列
         element_not_draw = p(row_not_draw, col_not_draw);  % 没有被划线的数
-        min_value = min(element_not_draw);  % 没有被划线的数中最小的数
+        min_value = min(min(element_not_draw));  % 没有被划线的数中最小的数
         p(row_not_draw, col_not_draw) = p(row_not_draw, col_not_draw) - min_value;
-        row_draw = find(x==1);  % 被划线的行
+        row_draw = find(x==0);  % 被划线的行
         col_draw = find(y==1);  % 被划线的列
         p(row_draw, col_draw) = p(row_draw, col_draw) + min_value; % 对被两条线划到的数中，加上最小的数     
     end
-    assignment = p;
+    %% 根据r确定了独立0的位置，也就确定了指派方法
+    temp = r(:);
+    pos = find(temp == 2);
+    temp = zeros(size(temp));
+    temp(pos) = 1;
+    assignment = reshape(temp,n,n);
 end
 
 
