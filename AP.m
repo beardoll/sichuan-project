@@ -60,7 +60,7 @@ function [assignment] = AP(costMat)
                     % 记得更新row和col
                     zero_of_col = find(p(index,:) == 0); % 在划线的行中零元素所在的列
                     col(zero_of_col) = col(zero_of_col) - 1;
-                    zero_of_row = find(p(:,index2) == 0)  % 在划线的列中零元素所在的列
+                    zero_of_row = find(p(:,index2) == 0);  % 在划线的列中零元素所在的列
                     row(zero_of_row) = row(zero_of_row) - 1;
                 end
             else     % 最少0元素在列

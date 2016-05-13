@@ -1,4 +1,4 @@
-function [u_final] = cluster(center_ini, demand, samplex, sampley, cluster_num, capacity, option)
+function [u_final, center] = cluster(center_ini, demand, samplex, sampley, cluster_num, capacity, option)
     % center_ini: 簇首的初始位置
     % demand:各个数据点的货物需求
     % samplex, sampley: 数据点的x，y坐标
