@@ -63,4 +63,7 @@ dist_spot(4,2) = 2;
 dist_spot(4,3) = 3;
 dist_spot(4,4) = inf;
 
-[path] = branchbound(4, 4, dist_spot, dist_repo)
+% dist_spot = rand(12,12);
+% dist_repo = rand(1,12);
+
+[path, cost] = branchbound(4, 4, dist_spot, dist_repo)

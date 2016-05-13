@@ -86,16 +86,16 @@ for k = 1:KL
         for j = i+1:memlen
             if i <= length(linemem)    % 如果i是linehaul节点
                 if j <= length(linemem) % 如果j是linehaul节点
-                    dist_spot(i,j) = (Lx(mem(i)) - Lx(mem(j)))^2 +...
-                        (Ly(mem(i)) - Ly(mem(j)))^2;
+                    dist_spot(i,j) = (Lx(lmem(i)) - Lx(linemem(j)))^2 +...
+                        (Ly(linemem(i)) - Ly(linemem(j)))^2;
                 else   % 如果j是backhaul节点
-                    dist_spot(i,j) = (Lx(mem(i)) - Bx(mem(j)-linehaulnum))^2 +...
-                        (Ly(mem(i)) - By(mem(j)-linehaulnum))^2;
+                    dist_spot(i,j) = (Lx(linemem(i)) - Bx(backmem(j)-linehaulnum))^2 +...
+                        (Ly(linemem(i)) - By(backmem(j)-linehaulnum))^2;
                 end
                 dist_spot(j,i) = dist_spot(i,j);  % 对称性
             else  % 如果w是backhaul节点，那么v也必然是backhaul节点
-                dist_spot(i,j) = (Bx(mem(i)-linehaulnum) - Bx(mem(j)-linehaulnum))^2+...
-                    (By(mem(i)-linehaulnum) - By(mem(j)-linehaulnum))^2;
+                dist_spot(i,j) = (Bx(backmem(i)-linehaulnum) - Bx(backmem(j)-linehaulnum))^2+...
+                    (By(backmem(i)-linehaulnum) - By(backmem(j)-linehaulnum))^2;
                 dist_spot(j,i) = dist_spot(i,j);  % 对称性
             end
         end        
@@ -103,9 +103,9 @@ for k = 1:KL
     dist_repo = zeros(1,memlen);  % 仓库到各节点的距离
     for i = 1:memlen
         if i <= length(linemem) % 第i个点是linehaul节点
-            dist_repo(i) = (Lx(mem(i)) - repox)^2 + (Ly(mem(i)) - repoy)^2;
+            dist_repo(i) = (Lx(linemem(i)) - repox)^2 + (Ly(linemem(i)) - repoy)^2;
         else
-            dist_repo(i) = (Bx(mem(i)-linehaulnum) - repox)^2 + (By(mem(i)-linehaulnum) - repoy)^2;
+            dist_repo(i) = (Bx(backmem(i)-linehaulnum) - repox)^2 + (By(backmem(i)-linehaulnum) - repoy)^2;
         end
     end
     % [best_path] = branchbound(N, n, dist_spot, dist_repo)
@@ -113,10 +113,6 @@ for k = 1:KL
     % N是节点总的个数
     % dist_spot是节点之间的相互距离（不包括仓库）
     % dist_repo是各节点到仓库的距离
-    fprintf('The %d iteration\n',k);
-    mem
-    dist_spot
-    dist_repo
     [best_path] = branchbound(memlen, length(linemem), dist_spot, dist_repo);
     relative_pos = best_path(2:1+memlen);  % 第一个和最后一个节点是仓库
     bestpath(2:1+memlen) = mem(relative_pos);
