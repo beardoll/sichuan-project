@@ -24,6 +24,9 @@
 % for i = 1:5
 %     dist_spot(i,i) = inf;
 % end
+% 
+% [path, cost] = branchboundtight(5, 3, dist_spot, dist_repo)
+% [path, cost] = branchbound(5, 5, dist_spot, dist_repo);
 
 % dist_repo = [3 3 2 6];
 % dist_spot = zeros(4,4);
@@ -66,4 +69,4 @@ dist_spot(4,4) = inf;
 % dist_spot = rand(12,12);
 % dist_repo = rand(1,12);
 
-[path, cost] = branchbound(4, 4, dist_spot, dist_repo)
+[path, cost] = branchboundtight(4, 4, dist_spot, dist_repo)
