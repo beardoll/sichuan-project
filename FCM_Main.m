@@ -1,22 +1,22 @@
 % % clc;clear;
-% load dataset;
-% linehaulnum = length(datasetLx);
-% backhaulnum = length(datasetBx);
-% capacity = 32;
-% % 仓库的坐标
-% repox = 50;
-% repoy = 0;
-% 
-% %% 首先确定应该用几辆车去运送Linehaul和Backhaul
-% KL = BPP(demandL, capacity);
-% KB = BPP(demandB, capacity);
-% 
-% %% 对Linehaul和Backhaul进行分簇
-% Lx = datasetLx;
-% Ly = datasetLy;
-% Bx = datasetBx;
-% By = datasetBy;
-% 
+load dataset;
+linehaulnum = length(datasetLx);
+backhaulnum = length(datasetBx);
+capacity = 32;
+% 仓库的坐标
+repox = 50;
+repoy = 0;
+
+%% 首先确定应该用几辆车去运送Linehaul和Backhaul
+KL = BPP(demandL, capacity);
+KB = BPP(demandB, capacity);
+
+%% 对Linehaul和Backhaul进行分簇
+Lx = datasetLx;
+Ly = datasetLy;
+Bx = datasetBx;
+By = datasetBy;
+
 % % 初始化簇首
 % range = [0 100 30 100];
 % rowDiv = 4;
@@ -39,12 +39,19 @@
 % [uB, centerB] = cluster(CHB, demandB, Bx, By, KB, capacity, 1);
 % clusterB = cell(KB);   % 每个簇的成员, linehaulnum+1 - linehaulnum + backhaulnum
 % for i = 1:KB
-%     mem = find(uL((i-1)*backhaulnum+1:i*backhaulnum)==1);
+%     mem = find(uB((i-1)*backhaulnum+1:i*backhaulnum)==1);
 %     clusterB{i} = mem+linehaulnum;
 % end
-% 
-% %% 针对Linehaul和Backhaul进行配对，形成簇
+% save('origincluster.mat', 'clusterL', 'clusterB');
+
+%%%%%%%%%%%%%%%%%%% 画出分簇情况 %%%%%%%%%%%%%%%%%
+% load origincluster;
+% drawcluster(clusterB, Lx, Ly, Bx, By, linehaulnum);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% 针对Linehaul和Backhaul进行配对，形成簇
 % % 首先计算Linehaul和Backhaul簇心/仓库之间的距离
+% load origincluster;
 % straight_connect = KL-KB;
 % center_dist = zeros(KL, KL);
 % for i = 1:KL
@@ -52,7 +59,7 @@
 %         if j <= KB
 %             center_dist(i,j) = (centerL(i,1)-centerB(j,1))^2+(centerL(i,2)-centerB(j,2))^2;
 %         else
-%             center_dist(i,j) = (centerL(i,1) - repox)^2 + (centerB(i,2) - repoy)^2;
+%             center_dist(i,j) = (centerL(i,1) - repox)^2 + (centerL(i,2) - repoy)^2;
 %         end
 %     end
 % end
@@ -70,117 +77,72 @@
 % end
 % filename = 'big_cluster.mat';
 % save(filename, 'big_cluster');
-load big_cluster;
-            
-            
-%% 对各簇内结点求最佳路径
-path = cell(KL);
-for k = 1:KL
-    mem = big_cluster{k};  % 簇内成员
-    memlen = length(mem);  % 簇内成员数目
-    linemem = mem(find(mem<=linehaulnum)); % linehaul节点，绝对定位
-    backmem = setdiff(mem, linemem);  % backhaul节点，绝对定位
-    dist_spot = zeros(memlen, memlen);
-    for i = 1:memlen
-        dist_spot(i,i) = inf;
-        for j = i+1:memlen
-            if i <= length(linemem)    % 如果i是linehaul节点
-                if j <= length(linemem) % 如果j是linehaul节点
-                    dist_spot(i,j) = (Lx(mem(i)) - Lx(mem(j)))^2 +...
-                        (Ly(mem(i)) - Ly(mem(j)))^2;
-                else   % 如果j是backhaul节点
-                    dist_spot(i,j) = (Lx(mem(i)) - Bx(mem(j)-linehaulnum))^2 +...
-                        (Ly(mem(i)) - By(mem(j)-linehaulnum))^2;
-                end
-                dist_spot(j,i) = dist_spot(i,j);  % 对称性
-            else  % 如果w是backhaul节点，那么v也必然是backhaul节点
-                dist_spot(i,j) = (Bx(mem(i)-linehaulnum) - Bx(mem(j)-linehaulnum))^2+...
-                    (By(mem(i)-linehaulnum) - By(mem(j)-linehaulnum))^2;
-                dist_spot(j,i) = dist_spot(i,j);  % 对称性
-            end
-        end        
-    end
-    dist_repo = zeros(1,memlen);  % 仓库到各节点的距离
-    for i = 1:memlen
-        if i <= length(linemem) % 第i个点是linehaul节点
-            dist_repo(i) = (Lx(mem(i)) - repox)^2 + (Ly(mem(i)) - repoy)^2;
-        else
-            dist_repo(i) = (Bx(mem(i)-linehaulnum) - repox)^2 + (By(mem(i)-linehaulnum) - repoy)^2;
-        end
-    end
-    % [best_path] = branchbound(N, n, dist_spot, dist_repo)
-    % n是linehaul的个数
-    % N是节点总的个数
-    % dist_spot是节点之间的相互距离（不包括仓库）
-    % dist_repo是各节点到仓库的距离
-    fprintf('The %d iteration\n',k);
-    mem
-    dist_spot
-    dist_repo
-    [best_path] = branchbound(memlen, length(linemem), dist_spot, dist_repo);
-    relative_pos = best_path(2:1+memlen);  % 第一个和最后一个节点是仓库
-    bestpath(2:1+memlen) = mem(relative_pos);
-    path{k} = best_path;
-end
+
+%%%%%%%%%%%%%%%% 画出分簇情况 %%%%%%%%%%%%%%%%%%%
+% load big_cluster;
+% drawcluster(big_cluster, Lx, Ly, Bx, By, linehaulnum);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% load big_cluster;            
+% %% 对各簇内结点求最佳路径
+% path = cell(KL);
+% for k = 1:KL
+%     mem = big_cluster{k};  % 簇内成员
+%     memlen = length(mem);  % 簇内成员数目
+%     linemem = mem(find(mem<=linehaulnum)); % linehaul节点，绝对定位
+%     backmem = setdiff(mem, linemem);  % backhaul节点，绝对定位
+%     dist_spot = zeros(memlen, memlen);
+%     for i = 1:memlen
+%         dist_spot(i,i) = inf;
+%         for j = i+1:memlen
+%             if i <= length(linemem)    % 如果i是linehaul节点
+%                 if j <= length(linemem) % 如果j是linehaul节点
+%                     dist_spot(i,j) = (Lx(mem(i)) - Lx(mem(j)))^2 +...
+%                         (Ly(mem(i)) - Ly(mem(j)))^2;
+%                 else   % 如果j是backhaul节点
+%                     dist_spot(i,j) = (Lx(mem(i)) - Bx(mem(j)-linehaulnum))^2 +...
+%                         (Ly(mem(i)) - By(mem(j)-linehaulnum))^2;
+%                 end
+%                 dist_spot(j,i) = dist_spot(i,j);  % 对称性
+%             else  % 如果w是backhaul节点，那么v也必然是backhaul节点
+%                 dist_spot(i,j) = (Bx(mem(i)-linehaulnum) - Bx(mem(j)-linehaulnum))^2+...
+%                     (By(mem(i)-linehaulnum) - By(mem(j)-linehaulnum))^2;
+%                 dist_spot(j,i) = dist_spot(i,j);  % 对称性
+%             end
+%         end        
+%     end
+%     dist_repo = zeros(1,memlen);  % 仓库到各节点的距离
+%     for i = 1:memlen
+%         if i <= length(linemem) % 第i个点是linehaul节点
+%             dist_repo(i) = (Lx(mem(i)) - repox)^2 + (Ly(mem(i)) - repoy)^2;
+%         else
+%             dist_repo(i) = (Bx(mem(i)-linehaulnum) - repox)^2 + (By(mem(i)-linehaulnum) - repoy)^2;
+%         end
+%     end
+%     % [best_path] = branchbound(N, n, dist_spot, dist_repo)
+%     % n是linehaul的个数
+%     % N是节点总的个数
+%     % dist_spot是节点之间的相互距离（不包括仓库）
+%     % dist_repo是各节点到仓库的距离
+%     fprintf('The %d iteration\n',k);
+%     dist_repo
+%     dist_spot
+%     [best_path, best_cost] = branchboundtight(memlen, length(linemem), dist_spot, dist_repo);
+%     relative_pos = best_path(2:1+memlen);  % 第一个和最后一个节点是仓库
+%     bestpath(2:1+memlen) = mem(relative_pos);
+%     path{k} = best_path;
+% end
+% filename = 'best_path.mat';
+% save(filename, 'path');
 
 
 %% 把路径结果给画出来
+load('best_path.mat');
+for i = 1:KL
+    temp = path{i};
+    mem = big_cluster{i};  % 簇内成员
+    path{i} = mem(temp(2:end-1));
+end
+drawpicture(path, Lx, Ly, Bx, By, repox, repoy);
 
-
-
-
-% allocation
-% for k = 1:datanum
-%     spot = find(u==max(u));
-%     
-
-% for i = 1:datanum
-%     type = find(Umatrix(i,:) == max(Umatrix(i,:)));
-%     k_demand(type) = k_demand(type)+demand(i);
-%     switch type
-%         case 1  
-%             plot(dataset(i,1),dataset(i,2),'ro');
-%             axis([0 100 0 100]);
-%             hold on;            
-%         case 2 
-%             plot(dataset(i,1),dataset(i,2),'go');
-%             hold on;
-%         case 3 
-%             plot(dataset(i,1),dataset(i,2),'bo');
-%             hold on;
-%     end
-% end
-% 
-% plot(center(1,1),center(1,2),'r*');
-% plot(center(2,1),center(2,2),'g*');
-% plot(center(3,1),center(3,2),'b*');
-% k_demand
-
-
-%%%%%%%%%%%%%%%%%%%%%%% 画簇首初始分布 %%%%%%%%%%%%%%%%%%%
-% for i=1:linehaulnum
-%     plot(datasetLx(i),datasetLy(i),'ro');
-%     axis([0 100 0 100]);
-%     hold on;
-% end
-% 
-% for i=1:backhaulnum
-%     plot(datasetBx(i),datasetBy(i),'go');
-%     axis([0 100 0 100]);
-%     hold on;
-% end
-% 
-% for i = 1:KL
-%     plot(CHL(i,1),CHL(i,2),'r*');
-%     axis([0 100 0 100]);
-%     hold on;
-% end
-% 
-% for i = 1:KB
-%     plot(CHB(i,1),CHB(i,2),'g*');
-%     axis([0 100 0 100]);
-%     hold on;
-% end
-% hold off;
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
