@@ -1,12 +1,70 @@
-function [path, cost] = branchboundtight(N, n, dist_spot, dist_repo)
+function [best_path, cost] = branchboundtight(N, n, dist_spot, dist_repo)
     % n是linehaul的个数
     % N是节点总的个数
     % dist_spot是节点之间的相互距离（不包括仓库）
     % dist_repo是各节点到仓库的距离
-    path = 0;
-    node.pathcost = 8;
-    node.path = [0 4];
-    cost = get_lb(node, dist_spot, dist_repo, n,N);
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%% 测试用代码 %%%%%%%%%%%%%%%%%%%%%%%%%%
+%     best_path = 0;
+%     node.pathcost = 5;
+%     node.path = [0 3];
+%     cost = get_lb(node, dist_spot, dist_repo, n,N);
+%     path = 0;
+%     [cost] = greedy_algorithm(N, n, dist_spot, dist_repo);
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    % 初始化
+    pq = [];
+    hn.num = 0;
+    hn.pathcost = 0;
+    hn.path = [0];
+    [best_path, best_c] = greedy_algorithm(N, n, dist_spot, dist_repo);  % 利用贪婪算法计算出来的上界
+    for i = 1:n
+        node.pathcost = hn.pathcost + dist_repo(i);
+        node.path = [hn.path, i];
+        node.lb = get_lb(node, dist_spot, dist_repo, n, N);
+        if node.lb <= best_c
+            node.num = i;
+            pq = [pq, node];
+        end
+    end
+    while isempty(pq) ~= 1  % 当pq不为空时
+        pq = rank(pq);
+        hn = pq(1);
+        pq(1) = [];
+        if length(hn.path) - 1 < n   % 当前还在linehaul节点上寻找路径
+            line_spot = 1:n;
+            impose = setdiff(line_spot, hn.path); % 没走过的linehaul节点
+            for i = 1:length(impose)
+                node.path = [hn.path, impose(i)];
+                node.pathcost = hn.pathcost + dist_spot(hn.num, impose(i));
+                node.lb = get_lb(node, dist_spot, dist_repo, n, N);
+                if node.lb <= best_c
+                    node.num = impose(i);
+                    pq = [pq, node];
+                end
+            end
+        elseif length(hn.path) - 1 == n && n == N || length(hn.path)-1 == N % 没有backhaul节点
+            cc = hn.pathcost + dist_repo(hn.num);
+            if cc <= best_c
+                best_c = cc;
+                best_path = [hn.path 0]
+            end
+        else  % 还没到最后一层
+            back_spot = n+1:N;
+            impose = setdiff(back_spot, hn.path);  % 没走过的backhaul节点
+            for i = 1:length(impose)
+                node.path = [hn.path, impose(i)];
+                node.pathcost = hn.pathcost + dist_spot(hn.num, impose(i));
+                node.lb = get_lb(node, dist_spot, dist_repo, n, N);
+                if node.lb <= best_c
+                    node.num = impose(i);
+                    pq = [pq, node];
+                end
+            end
+        end
+    end
+    cost = best_c;
 end
 
 function [cost] = get_lb(node, dist_spot, dist_repo, n, N)
@@ -52,7 +110,7 @@ function [cost] = get_lb(node, dist_spot, dist_repo, n, N)
             % 求linehaul和backhaul的最小互连代价
             back_spot = n+1:N;  % backhaul节点标号
             mindist_tobackhaul = min(min(dist_spot(remain_linehaul, back_spot)));
-            cost = cost + mindist_tobackhaul
+            cost = cost + mindist_tobackhaul*2;
             % 计算backhaul节点的最小内联代价
             costB = zeros(N-n,2);
             if  length(back_spot) == 2  % 剩余两个backhaul节点
@@ -77,9 +135,9 @@ function [cost] = get_lb(node, dist_spot, dist_repo, n, N)
         end
         cost = cost + 2*mindist_start + 2*mindist_end;
         cost = cost / 2;
-    elseif pathlen - 1 == n && n == N   % 所有路径已走完（没有backhaul节点）
+    elseif pathlen - 1 == n && n == N  || pathlen - 1 == N % 所有路径已走完（没有backhaul节点）
         cost = cost / 2;
-    else       % 剩余节点中已经没有linehaul节点
+    elseif pathlen - 1 < N       % 剩余节点中已经没有linehaul节点
         %%%%%%%%%%%%%%%%%%%%%% 首先加上最小内联代价  %%%%%%%%%%%%%%%%%%%%%%%%%%
         back_spot = n+1:N;  % backhaul节点标号
         remain_backhaul = setdiff(back_spot, path);   % 剩余节点中的backhaul节点
@@ -93,7 +151,7 @@ function [cost] = get_lb(node, dist_spot, dist_repo, n, N)
             end
             temp = costB(:);
             temp = sort(temp);
-            cost = cost + sum(temp(1:end-2));  % 加上n-2条边的最小内联代价
+            cost = cost + sum(temp(1:end-2));  % 加上(n-1)*2条边的最小内联代价
         elseif remain_backhaulnum == 2
             % 剩余backhaul节点数量等于2
             cost = cost + 2*dist_spot(remain_backhaul(1), remain_backhaul(2));
@@ -115,5 +173,44 @@ function [order_pq] = rank(pq)
     end
     [sort_vec, sort_num] = sort(cost_vec);  % 对已有费用进行排序
     order_pq = pq(sort_num);
+end
+
+function [cpath, cost] = greedy_algorithm(N, n, dist_spot, dist_repo)
+% 利用贪婪算法求得初始上界
+    csp = 0;
+    cost = 0;
+    nsp = find(dist_repo(1:n) == min(dist_repo(1:n))); % 找到最近的linehaul节点
+    path = [nsp];         % 已走过的路径，不包括起点和重点
+    cost = cost + dist_repo(nsp);
+    csp = nsp;
+    for i = 1:n-1        
+        temp = dist_spot(csp,1:n);
+        temp(path) = inf;
+        nsp = find(temp == min(temp));
+        cost = cost + dist_spot(csp, nsp);
+        path = [path, nsp];
+        csp = nsp;
+    end
+    cpath = [0 path];
+    if n == N   % 没有backhaul节点
+        cost = cost + dist_repo(csp);
+        cpath = [cpath 0];
+    else  % 有backhaul节点
+        temp = dist_spot(csp, n+1:N);
+        nsp = find(temp == min(temp)) + n;
+        cost = cost + dist_spot(csp, nsp);
+        path = nsp;    % 把linehaul节点去掉
+        csp = nsp;
+        for j = n+1:N-1
+            temp = dist_spot(csp,n+1:N);
+            temp(path-n) = inf;
+            nsp = find(temp == min(temp)) + n;  % 前面有n个linehaul节点
+            cost = cost + dist_spot(csp, nsp);
+            path = [path, nsp];
+            csp = nsp;
+        end
+        cost = cost + dist_repo(csp);
+        cpath = [cpath, path, 0];
+    end        
 end
                 
