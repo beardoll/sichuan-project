@@ -28,7 +28,7 @@ function [] = drawpicture(path, Lx, Ly, Bx, By, repox, repoy)
                 else
                     x2 = Bx(backnum - linehaulnum);
                     y2 = By(backnum - linehaulnum);
-                    color = 'bo';
+                    color = 'bd';
                 end
                 plot([x1 x2], [y1 y2], 'r-');
                 plot(x2, y2, color);
@@ -36,6 +36,7 @@ function [] = drawpicture(path, Lx, Ly, Bx, By, repox, repoy)
                 plot([x1 repox], [y1 repoy], 'r-');
             end
         end
+%         legend('Á¬½Ó±ß','²Ö¿â','linehaul', 'backhaul');
         hold off;
     end        
 end
