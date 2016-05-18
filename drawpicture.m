@@ -4,13 +4,13 @@ function [] = drawpicture(path, Lx, Ly, Bx, By, repox, repoy)
     for i = 1:pathnum
         figure(i);
         part_path = path{i}
-        plot([repox Lx(part_path(2))], [repoy Ly(part_path(2))], 'r-');
+        plot([repox Lx(part_path(1))], [repoy Ly(part_path(1))], 'r-');
         axis([0 100 0 100]);
         hold on;
         plot(repox, repoy, 'b*');
-        plot(Lx(part_path(2)), Ly(part_path(2)), 'go');
+        plot(Lx(part_path(1)), Ly(part_path(1)), 'go');
         pathlen = length(part_path);
-        for j = 3:pathlen
+        for j = 2:pathlen+1
             frontnum = part_path(j-1);
             if frontnum <= linehaulnum
                 x1 = Lx(frontnum);
@@ -19,7 +19,7 @@ function [] = drawpicture(path, Lx, Ly, Bx, By, repox, repoy)
                 x1 = Bx(frontnum - linehaulnum);
                 y1 = By(frontnum - linehaulnum);
             end
-            if j < pathlen
+            if j <= pathlen
                 backnum = part_path(j);
                 if backnum <= linehaulnum
                     x2 = Lx(backnum);

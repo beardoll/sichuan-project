@@ -33,7 +33,7 @@ function [u_final, center] = cluster(center_ini, demand, samplex, sampley, clust
         u = u_new;
         newcenter = zeros(K,2);
         for i = 1:K
-            newcenter(i,1) = sum(u((i-1)*datanum+1:i*datanum).*samplex)/sum(u((i-1)*datanum+1:i*datanum));
+            newcenter(i,1) = sum(u((i-1)*datanum+1:i*datanum).*samplex)/sum(u((i-1)*datanum+1:i*datanum));   % ¸üĞÂ´ØÊ×
             newcenter(i,2) = sum(u((i-1)*datanum+1:i*datanum).*sampley)/sum(u((i-1)*datanum+1:i*datanum));
         end
         gap = sum(sum((center-newcenter).^2));
