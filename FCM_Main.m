@@ -1,117 +1,149 @@
 % clc;clear;
-K = 3;
-center = zeros(K,2);
-xrange = 100;
-yrange = 100;
-capacity = 32;
-
+% 绝对定位： 比如，1 -- n表示linehaul, n+1 -- m表示backhaul
 load dataset;
-load demand;
-datanum = size(dataset, 1);
+linehaulnum = length(datasetLx);
+backhaulnum = length(datasetBx);
+capacity = 32;
+% 仓库的坐标
+repox = 50;
+repoy = 0;
 
-% for i = 1:K
-%     center(i,1) = rand * 33+33*(i-1);
-%     center(i,2) = rand * yrange;
+%% 首先确定应该用几辆车去运送Linehaul和Backhaul
+KL = BPP(demandL, capacity);
+KB = BPP(demandB, capacity);
+
+%% 对Linehaul和Backhaul进行分簇
+Lx = datasetLx;
+Ly = datasetLy;
+Bx = datasetBx;
+By = datasetBy;
+% 
+% % 初始化簇首
+% range = [0 100 30 100];
+% rowDiv = 4;
+% colDiv = 2;
+% [CHL, CHB] = detectOriginalValue(range, rowDiv, colDiv, Lx, Ly, Bx, By, KL, KB);
+% 
+% % 分别分簇
+% [uL, centerL] = cluster(CHL, demandL, Lx, Ly, KL, capacity, 1);
+% uL = int8(uL);
+% clusterL = cell(KL);   % 每个簇的成员,1-linehaulnum
+% for i = 1:KL
+%     mem = find(uL((i-1)*linehaulnum+1:i*linehaulnum)==1);
+%     clusterL{i} = mem;
 % end
-center(1,1) = 16;center(1,2) = 49;
-center(2,1) = 49;center(2,2) = 79;
-center(3,1) = 79;center(3,2) = 49;
-
-% center(1,1) = rand * 33;center(1,2) = rand * 33 + 33;
-% center(2,1) = rand * 33 + 33;center(2,2) = rand * 33 + 66;
-% center(3,1) = rand * 33 + 66;center(3,2) = rand * 33 + 33;
-
-epsilon = 10^(-4);
-gap = 1;
-u_ini = 1/K*ones(datanum*K,1);
-u = u_ini;
-nn = 1;
-
-while gap > epsilon 
-    nn = nn+1;
-    dist = zeros(datanum*K,1);
-    for i = 1:length(dist)
-        clusterindex = floor(i/datanum)+1;
-        if i - (clusterindex-1)*datanum == 0
-            clusterindex = clusterindex - 1;
-        end
-        num = i - (clusterindex-1)*datanum;
-        datax = dataset(num,1);
-        datay = dataset(num,2);
-        dist(i) = (datax-center(clusterindex,1))^2+(datay-center(clusterindex,2))^2;
-    end
-    dist;
-
-%%%%%%%%%%%  fuzzy clustering method with non-integer inequalityconstraint %%%%%%%%%%    
-%     results = FCM(dist,K,capacity,demand);
-%     u_new = results;
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%% fuzzy clustering method without inequality constraint %%%%%%%%
-%     u_new = zeros(datanum*K,1);
-%     distmat = reshape(1./dist,datanum,K);
-%     for i = 1:datanum*K
-%         cl = floor(i/datanum)+1;
-%         if mod(i,datanum) == 0
-%             cl = cl - 1;
+% % cluster(center_ini, demand, samplex, sampley, cluster_num, capacity, option)
+% % center_ini: 簇首的初始位置
+% % demand:各个数据点的货物需求
+% % samplex, sampley: 数据点的x，y坐标
+% % option: 分簇模式，1表示整数规划，2表示无负载约束FCM，3表示有负载约束FCM
+% % 返回隶属矩阵u
+% [uB, centerB] = cluster(CHB, demandB, Bx, By, KB, capacity, 1);
+% uB = int8(uB);
+% clusterB = cell(KB);   % 每个簇的成员, linehaulnum+1 - linehaulnum + backhaulnum
+% for i = 1:KB
+%     mem = find(uB((i-1)*backhaulnum+1:i*backhaulnum)==1);
+%     clusterB{i} = mem+linehaulnum;
+% end
+% save('origincluster.mat', 'clusterL', 'clusterB');
+% 
+% %%%%%%%%%%%%%%%%%%% 画出初始分簇情况 %%%%%%%%%%%%%%%%%
+load origincluster;
+drawcluster(clusterL, Lx, Ly, Bx, By, linehaulnum);
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% %% 针对Linehaul和Backhaul进行配对，形成簇
+% % 首先计算Linehaul和Backhaul簇心/仓库之间的距离
+% % load origincluster;
+% straight_connect = KL-KB;    % 直接连接边的数量，即linehaul直接连接仓库
+% center_dist = zeros(KL, KL);
+% for i = 1:KL
+%     for j = 1:KL
+%         if j <= KB    % linehaul连接backhaul
+%             center_dist(i,j) = sqrt((centerL(i,1)-centerB(j,1))^2+(centerL(i,2)-centerB(j,2))^2);
+%         else          % linehaul直接连接仓库
+%             center_dist(i,j) = sqrt((centerL(i,1) - repox)^2 + (centerL(i,2) - repoy)^2);
 %         end
-%         num = i - datanum*(cl-1);
-%         u_new(i) = 1/(dist(i,:)*sum(distmat(num,:)));
 %     end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% end
+% 
+% % 然后进行配对
+% [assignment] = AP(center_dist);
+% big_cluster = cell(linehaulnum);
+% for i = 1:KL
+%     match = find(assignment(i,:)==1);  % 找出linehaul的簇跟谁配对
+%     if match <= KB  % 和backhaul配对
+%         big_cluster{i} = [clusterL{i};clusterB{match}];
+%     else            % 和repository配对
+%         big_cluster{i} = clusterL{i};
+%     end
+% end
+% filename = 'big_cluster.mat';
+% save(filename, 'big_cluster');
+% 
+% %%%%%%%%%%%%%%%% 画出合并后分簇情况 %%%%%%%%%%%%%%%%%%%
+% % load big_cluster;
+% % drawcluster(big_cluster, Lx, Ly, Bx, By, linehaulnum);
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%             
+% %% 对各簇内结点求最佳路径
+% % load big_cluster;
+% path = cell(KL);
+% for k = 1:KL
+%     mem = big_cluster{k};  % 簇内成员
+%     memlen = length(mem);  % 簇内成员数目
+%     linemem = mem(find(mem<=linehaulnum)); % linehaul节点，绝对定位
+%     backmem = setdiff(mem, linemem);  % backhaul节点，绝对定位
+%     dist_spot = zeros(memlen, memlen);
+%     for i = 1:memlen
+%         dist_spot(i,i) = inf;
+%         for j = i+1:memlen
+%             if i <= length(linemem)    % 如果i是linehaul节点
+%                 if j <= length(linemem) % 如果j是linehaul节点
+%                     dist_spot(i,j) = sqrt((Lx(mem(i)) - Lx(mem(j)))^2 +...
+%                         (Ly(mem(i)) - Ly(mem(j)))^2);
+%                 else   % 如果j是backhaul节点
+%                     dist_spot(i,j) = sqrt((Lx(mem(i)) - Bx(mem(j)-linehaulnum))^2 +...
+%                         (Ly(mem(i)) - By(mem(j)-linehaulnum))^2);
+%                 end
+%                 dist_spot(j,i) = dist_spot(i,j);  % 对称性
+%             else  % 如果w是backhaul节点，那么v也必然是backhaul节点
+%                 dist_spot(i,j) = sqrt((Bx(mem(i)-linehaulnum) - Bx(mem(j)-linehaulnum))^2+...
+%                     (By(mem(i)-linehaulnum) - By(mem(j)-linehaulnum))^2);
+%                 dist_spot(j,i) = dist_spot(i,j);  % 对称性
+%             end
+%         end        
+%     end
+%     dist_repo = zeros(1,memlen);  % 仓库到各节点的距离
+%     for i = 1:memlen
+%         if i <= length(linemem) % 第i个点是linehaul节点
+%             dist_repo(i) = sqrt((Lx(mem(i)) - repox)^2 + (Ly(mem(i)) - repoy)^2);
+%         else
+%             dist_repo(i) = sqrt((Bx(mem(i)-linehaulnum) - repox)^2 + (By(mem(i)-linehaulnum) - repoy)^2);
+%         end
+%     end
+%     % [best_path] = branchbound(N, n, dist_spot, dist_repo)
+%     % n是linehaul的个数
+%     % N是节点总的个数
+%     % dist_spot是节点之间的相互距离（不包括仓库）
+%     % dist_repo是各节点到仓库的距离
+%     fprintf('The path for %d cluster\n',k);
+%     [best_path, best_cost] = branchboundtight(memlen, length(linemem), dist_spot, dist_repo);
+%     relative_pos = best_path(2:end-1);  % 第一个和最后一个节点是仓库
+%     best_path(2:end-1) = mem(relative_pos);  % 将路径中的标号换成绝对定位
+%     path{k} = best_path;
+% end
+% filename = 'best_path.mat';
+% save(filename, 'path');
 
-%%%%%%%%%%% fuzzy clustering method with integer-inequality constraint  %%%%%%
-    ux = intvar(datanum*K,1);
-    f = dist'*ux;
-    F = [ux>=0];
-    temp = diag(ones(1,datanum));
-    A = [temp temp temp];
-    b = ones(datanum,1);
-    F = F+[A*ux==b];
-    for j = 1:K
-        F=F+[ux((j-1)*datanum+1:j*datanum)'*demand <= capacity];
-    end
-    solvesdp(F,f);
-    u_new = double(ux);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    u = u_new;
-    newcenter = zeros(K,2);
-    for i = 1:K
-        newcenter(i,1) = sum(u((i-1)*datanum+1:i*datanum).^2.*dataset(:,1))/sum(u((i-1)*datanum+1:i*datanum).^2);
-        newcenter(i,2) = sum(u((i-1)*datanum+1:i*datanum).^2.*dataset(:,2))/sum(u((i-1)*datanum+1:i*datanum).^2);
-    end
-    gap = sum(sum((center-newcenter).^2));
-    center = newcenter;
-end
+% %% 把路径结果给画出来
+% load big_cluster;
+% load('best_path.mat');
+% for i = 1:KL
+%     temp = path{i};
+%     path{i} = temp(2:end-1);  % 画图的path是去掉仓库节点0的
+% end
+% drawpicture(path, Lx, Ly, Bx, By, repox, repoy);
 
-k_demand = zeros(K,1);
-Umatrix = reshape(u,datanum,K);
-
-% allocation
-% for k = 1:datanum
-%     spot = find(u==max(u));
-%     
-
-for i = 1:datanum
-    type = find(Umatrix(i,:) == max(Umatrix(i,:)));
-    k_demand(type) = k_demand(type)+demand(i);
-    switch type
-        case 1  
-            plot(dataset(i,1),dataset(i,2),'ro');
-            axis([0 100 0 100]);
-            hold on;            
-        case 2 
-            plot(dataset(i,1),dataset(i,2),'go');
-            hold on;
-        case 3 
-            plot(dataset(i,1),dataset(i,2),'bo');
-            hold on;
-    end
-end
-
-plot(center(1,1),center(1,2),'r*');
-plot(center(2,1),center(2,2),'g*');
-plot(center(3,1),center(3,2),'b*');
-k_demand
 

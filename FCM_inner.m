@@ -1,5 +1,5 @@
-function [results] = FCM(dist,C,capacity,demand)
-    % fuzzy clustering method
+function [results] = FCM_inner(dist,C,capacity,demand)
+    % 带负载约束的FCM， 采用内点法
     % dist: xi到vc的距离，i=1:N
     % u:N*C维列向量，其中第1组N个u代表样本对簇1的隶属度，以此类推
     % C:簇的数量
