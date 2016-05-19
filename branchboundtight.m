@@ -18,12 +18,20 @@ function [best_path, cost] = branchboundtight(N, n, dist_spot, dist_repo)
     hn.num = 0;
     hn.pathcost = 0;
     hn.path = [0];
-    [best_path, best_c] = greedy_algorithm(N, n, dist_spot, dist_repo);  % 利用贪婪算法计算出来的上界
+    [best_path1, best_c1] = route(N, n, dist_spot, dist_repo)  % 利用贪婪算法计算出来的上界
+    [best_path2, best_c2] = greedy_algorithm(N, n, dist_spot, dist_repo)  % 利用贪婪算法计算出来的上界
+    if best_c1 <= best_c2
+        best_path = best_path1;
+        best_c = best_c1;
+    else
+        best_path = best_path2;
+        best_c = best_c2;
+    end
     for i = 1:n
         node.pathcost = hn.pathcost + dist_repo(i);
         node.path = [hn.path, i];
         node.lb = get_lb(node, dist_spot, dist_repo, n, N);
-        if node.lb <= best_c
+        if node.lb < best_c
             node.num = i;
             pq = [pq, node];
         end
@@ -39,14 +47,14 @@ function [best_path, cost] = branchboundtight(N, n, dist_spot, dist_repo)
                 node.path = [hn.path, impose(i)];
                 node.pathcost = hn.pathcost + dist_spot(hn.num, impose(i));
                 node.lb = get_lb(node, dist_spot, dist_repo, n, N);
-                if node.lb <= best_c
+                if node.lb < best_c
                     node.num = impose(i);
                     pq = [pq, node];
                 end
             end
         elseif length(hn.path) - 1 == n && n == N || length(hn.path)-1 == N % 没有backhaul节点
             cc = hn.pathcost + dist_repo(hn.num);
-            if cc <= best_c
+            if cc < best_c
                 best_c = cc;
                 best_path = [hn.path 0]
             end
@@ -57,7 +65,7 @@ function [best_path, cost] = branchboundtight(N, n, dist_spot, dist_repo)
                 node.path = [hn.path, impose(i)];
                 node.pathcost = hn.pathcost + dist_spot(hn.num, impose(i));
                 node.lb = get_lb(node, dist_spot, dist_repo, n, N);
-                if node.lb <= best_c
+                if node.lb < best_c
                     node.num = impose(i);
                     pq = [pq, node];
                 end
@@ -213,4 +221,124 @@ function [cpath, cost] = greedy_algorithm(N, n, dist_spot, dist_repo)
         cpath = [cpath, path, 0];
     end        
 end
+
+function [path, cost] = route(N, n, dist_spot, dist_repo)
+    U = 1:N;   % 未添加到路径中的节点
+    delta = dist_repo;  % 考虑完全图，且对称
+    route = [];  % 去掉仓库节点的当前路径节点
+    cost = 0;
+    while isempty(U) == 0
+        % 线找出delta最大的点
+        temp = delta;
+        sortdelta = sort(temp, 'descend');
+        index = 1;
+        i = find(temp == sortdelta(index));
+        i = i(1);
+        while ismember(i,U) == 0  % i不是U里面的元素，说明i已经走过 
+            temp(i) = -1;
+            index = index + 1;
+            i = find(temp == sortdelta(index));
+            i = i(1);
+        end
+            
+        M = inf;
+        if length(route) == 0   % 刚刚从仓库出发
+            M = dist_repo(i)*2;
+            insert_point = 0;
+        else   % 寻找最适宜插入点
+            bound = find(route > n);
+            if i>n  % 如果i是backhaul节点
+                if isempty(bound) == 0   % 路径中有backhaul节点
+                    bound = bound(1) - 1;   % 最后一个linehaul节点(相对下标索引)
+                    for k = bound :length(route)
+                        if k == length(route)  % 到达路径的最后
+                            cpos = route(k);
+                            diff = dist_repo(i) + dist_spot(cpos, i) - dist_repo(cpos);
+                            if diff < M
+                                M = diff;
+                                insert_point = k;   % 插入点（前）
+                            end
+                        elseif k == 0  % 路径中仅有backhaul节点
+                            npos = route(k+1);
+                            diff = dist_repo(i)+dist_spot(i,npos)-dist_repo(npos);
+                            if diff < M
+                                M = diff;
+                                insert_point = k;   % 插入点（前）
+                            end
+                        else
+                            cpos = route(k);
+                            npos = route(k+1);
+                            diff = dist_spot(cpos, i)+dist_spot(i, npos) - dist_spot(cpos, npos);
+                            if diff < M
+                                M = diff;
+                                insert_point = k;   % 插入点（前）
+                            end
+                        end
+                    end
+                else  % 如果路径中没有后向节点，即这是第一个后向节点，那么直接插入到最后
+                    insert_point = length(route);   % 插入点（前）
+                    M = dist_repo(i)+dist_spot(i, insert_point) - dist_repo(insert_point);
+                end
+            else   % 如果i是linehaul节点
+                if isempty(bound)==0  % 如果路径中有backhaul节点
+                    bound = bound(1) - 1; % 最后一个linehaul节点（相对下标索引）
+                else
+                    bound = length(route);   % 路径中没有backhaul节点
+                end
+                for k = 0:bound
+                    if k == 0  % 如果当前插入点的前节点是仓库   
+                        npos = route(k+1);
+                        diff = dist_repo(i) + dist_spot(i, npos) - dist_repo(npos);
+                        if diff < M
+                            M = diff;
+                            insert_point = k;   % 插入点（前）
+                        end
+                    else  % 如果当前插入点的前节点不是仓库
+                        if k == length(route)   % 如果k是路径中最后位置
+                            cpos = route(k);
+                            diff = dist_repo(i) + dist_spot(cpos, i) - dist_repo(cpos);
+                            if diff < M
+                                M = diff;
+                                insert_point = k;
+                            end
+                        else  % 如果k不是路径中的最后位置
+                            cpos = route(k);   
+                            npos = route(k+1);
+                            diff = dist_spot(cpos, i)+dist_spot(i, npos) - dist_spot(cpos, npos);
+                            if diff < M
+                                M = diff;
+                                insert_point = k;   % 插入点（前）
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        cost = cost + M;
+        % 更新route和U
+        U = setdiff(U, i);
+        newroute = zeros(length(route)+1, 1);
+        if insert_point == length(route)   % 插入到路径最后
+            newroute(1:length(route)) = route;
+            newroute(end) = i;
+        elseif insert_point == 0  % 插入到开头
+            newroute(2:end) = route;
+            newroute(1) = i;
+        else
+            newroute(1:insert_point) = route(1:insert_point);
+            newroute(insert_point+1) = i;
+            newroute(insert_point+2:end) = route(insert_point+1:end);
+        end
+        route = newroute;
+        % 更新delta
+        for j = 1:length(U)
+            if dist_spot(i,j) < delta(j)
+                delta(j) = dist_spot(i,j);
+            end
+        end
+    end
+    % 加上最后回到仓库的回路
+    path = [0; route ;0]';
+end
+    
                 
