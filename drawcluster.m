@@ -1,4 +1,4 @@
-function [] = drawcluster(cluster, Lx, Ly, Bx, By, linehaulnum)
+function [] = drawcluster(cluster, Lx, Ly, Bx, By, linehaulnum, picturerange)
 coloroption = char('ro','bo','go','mo','ko');
 clusternum = length(cluster);
 for i = 1:clusternum
@@ -15,7 +15,7 @@ for i = 1:clusternum
             plot(Bx(ccp-linehaulnum), By(ccp-linehaulnum), coloroption(choose,:));
         end
         hold on;
-        axis([0 100 30 100]);
+        axis(picturerange);
     end
     hold on;
 end

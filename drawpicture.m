@@ -1,11 +1,11 @@
-function [] = drawpicture(path, Lx, Ly, Bx, By, repox, repoy)
+function [] = drawpicture(path, Lx, Ly, Bx, By, repox, repoy, picturerange)
     pathnum = length(path);   % Â·¾¶ÊýÁ¿
     linehaulnum = length(Lx);
     for i = 1:pathnum
-        figure(i);
+        figure(i+20);
         part_path = path{i}
         plot([repox Lx(part_path(1))], [repoy Ly(part_path(1))], 'r-');
-        axis([0 100 0 100]);
+        axis(picturerange);
         hold on;
         plot(repox, repoy, 'b*');
         plot(Lx(part_path(1)), Ly(part_path(1)), 'go');
