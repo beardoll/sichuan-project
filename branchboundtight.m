@@ -18,8 +18,8 @@ function [best_path, cost] = branchboundtight(N, n, dist_spot, dist_repo)
     hn.num = 0;
     hn.pathcost = 0;
     hn.path = [0];
-    [best_path1, best_c1] = route(N, n, dist_spot, dist_repo)  % 利用贪婪算法计算出来的上界
-    [best_path2, best_c2] = greedy_algorithm(N, n, dist_spot, dist_repo)  % 利用贪婪算法计算出来的上界
+    [best_path1, best_c1] = route(N, n, dist_spot, dist_repo);  % 利用贪婪算法计算出来的上界
+    [best_path2, best_c2] = greedy_algorithm(N, n, dist_spot, dist_repo);  % 利用贪婪算法计算出来的上界
     if best_c1 <= best_c2
         best_path = best_path1;
         best_c = best_c1;
@@ -56,7 +56,7 @@ function [best_path, cost] = branchboundtight(N, n, dist_spot, dist_repo)
             cc = hn.pathcost + dist_repo(hn.num);
             if cc < best_c
                 best_c = cc;
-                best_path = [hn.path 0]
+                best_path = [hn.path 0];
             end
         else  % 还没到最后一层
             back_spot = n+1:N;
@@ -188,6 +188,7 @@ function [cpath, cost] = greedy_algorithm(N, n, dist_spot, dist_repo)
     csp = 0;
     cost = 0;
     nsp = find(dist_repo(1:n) == min(dist_repo(1:n))); % 找到最近的linehaul节点
+    nsp = nsp(1);
     path = [nsp];         % 已走过的路径，不包括起点和重点
     cost = cost + dist_repo(nsp);
     csp = nsp;
