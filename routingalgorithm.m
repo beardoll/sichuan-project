@@ -175,7 +175,8 @@ function [totalcost] = routingalgorithm(dataset, option)
         % dist_spot是节点之间的相互距离（不包括仓库）
         % dist_repo是各节点到仓库的距离
         fprintf('The path for %d cluster\n',k);
-        [best_path, best_cost] = branchboundtight(memlen, length(linemem), dist_spot, dist_repo);
+%         [best_path, best_cost] = branchboundtight(memlen, length(linemem), dist_spot, dist_repo);
+        [best_path, best_cost] = TSPB_intprog(memlen, length(linemem), dist_spot, dist_repo);
         totalcost = totalcost + best_cost;
         relative_pos = best_path(2:end-1);  % 第一个和最后一个节点是仓库
         best_path(2:end-1) = mem(relative_pos);  % 将路径中的标号换成绝对定位

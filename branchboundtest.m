@@ -68,6 +68,6 @@ dist_spot(4,4) = inf;
 
 % dist_spot = rand(16,16);
 % dist_repo = rand(1,16);
-[best_path, best_cost] = dynamicprog(4, 1, dist_spot, dist_repo)
+% [best_path, best_cost] = dynamicprog(4, 1, dist_spot, dist_repo)
 % [path, cost] = branchbound(4, 4, dist_spot, dist_repo)
-[path, cost] = branchboundtight(4, 1, dist_spot, dist_repo)
+[path, cost] = branchboundtight(4, 4, dist_spot, dist_repo)
