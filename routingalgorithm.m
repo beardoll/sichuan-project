@@ -51,8 +51,8 @@ function [totalcost] = routingalgorithm(dataset, option)
 
     %% 对Linehaul和Backhaul进行分簇
     % 初始化簇首
-    [CHL] = detectOriginalValue(regionrange, rowDiv, colDiv, Lx, Ly, K, repox, repoy);
-    [CHB] = detectOriginalValue(regionrange, rowDiv, colDiv, Bx, By, K, repox, repoy);
+    [CHL] = detectOriginalValue(regionrange, rowDiv, colDiv, Lx, Ly, KL, repox, repoy);
+    [CHB] = detectOriginalValue(regionrange, rowDiv, colDiv, Bx, By, KB, repox, repoy);
 
 
     % 分别分簇
