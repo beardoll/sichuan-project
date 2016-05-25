@@ -4,10 +4,10 @@ xrange = [0 24000];   % 横坐标范围
 yrange = [0 32000];   % 纵坐标范围
 repox = 12000;        % 仓库x坐标
 repoy = 16000;        % 仓库y坐标
-linehaulnum = 75;     % 前向节点个数
-backhaulnum = 19;      % 后向节点个数
-carnum = 7;           % 货车车辆数
-capacity = 6600;      % 车容量
+linehaulnum = 30;     % 前向节点个数
+backhaulnum = 30;      % 后向节点个数
+carnum = 6;           % 货车车辆数
+capacity = 3000;      % 车容量
 Lx = zeros(linehaulnum, 1);   % 前向节点横坐标
 Ly = zeros(linehaulnum, 1);   % 前向节点纵坐标
 demandL = zeros(linehaulnum, 1);
@@ -42,11 +42,8 @@ dataset.rowDiv = 4;
 dataset.repox = repox;
 dataset.repoy = repoy;
 dataset.K = carnum;
-option.BPPl = 0;
-option.BPPb = 1;
-option.cluster4b = 1;
-option.cluster4l = 1;
-option.AP = 1;
+
+option.cluster = 2;
 option.drawbigcluster = 0;
 option.draworigincluster = 0;
 option.drawfinalrouting = 1;
@@ -62,11 +59,7 @@ option.drawfinalrouting = 1;
     %          regionrange: 观测的区域范围
     %          colDiv,rowDiv: 区域划分，分别代表纵向分块数和横向分块数
     %          K: 货车数量
-    % option: BPPl: =1, 利用BPP算法决定汽车数量(linehaul)
-    %         BPPb: =1. 利用BPP算法决定汽车数量(backhaul)
-    %         cluster4b: =1，利用分簇算法对backhaul节点进行分簇
-    %         cluster4l: =1，利用分簇算法对linehaul节点进行分簇
-    %         AP: =1. 使用assignment problem算法
+    % option: cluster: =1,使用分簇算法1.0，=2,使用分簇算法2.0
     %         draworigincluster: =1, 画初始簇分布
     %         drawbigcluster: =1，画backhaul和linehaul合并后的分簇结果
     %         drawfinalrouting: =1， 画最终路径图

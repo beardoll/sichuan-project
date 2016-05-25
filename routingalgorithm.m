@@ -11,11 +11,7 @@ function [totalcost] = routingalgorithm(dataset, option)
     %          regionrange: 观测的区域范围
     %          colDiv,rowDiv: 区域划分，分别代表纵向分块数和横向分块数
     %          K: 货车数量
-    % option: BPPl: =1, 利用BPP算法决定汽车数量(linehaul)
-    %         BPPb: =1. 利用BPP算法决定汽车数量(backhaul)
-    %         cluster4b: =1，利用分簇算法对backhaul节点进行分簇
-    %         cluster4l: =1，利用分簇算法对linehaul节点进行分簇
-    %         AP: =1. 使用assignment problem算法
+    % option: cluster: =1,使用分簇算法1.0，=2,使用分簇算法2.0
     %         draworigincluster: =1, 画初始簇分布
     %         drawbigcluster: =1，画backhaul和linehaul合并后的分簇结果
     %         drawfinalrouting: =1， 画最终路径图
@@ -36,27 +32,19 @@ function [totalcost] = routingalgorithm(dataset, option)
     linehaulnum = length(Lx);
     backhaulnum = length(Bx);
     K = dataset.K;
-
-    %% 首先确定应该用几辆车去运送Linehaul和Backhaul
-    if option.BPPl
-        KL = BPP(demandL, capacity);
-    else 
+    
+    if option.cluster == 1  % 第一种分簇方法
+       %% 首先确定应该用几辆车去运送Linehaul和Backhaul
+        % 经测试，对于backhaul，最佳方案还是硬分簇而不是随意分
         KL = K;
-    end
-    if option.BPPb
         KB = BPP(demandB, capacity);
-    else
-        KB = K;
-    end
 
-    %% 对Linehaul和Backhaul进行分簇
-    % 初始化簇首
-    [CHL] = detectOriginalValue(regionrange, rowDiv, colDiv, Lx, Ly, KL, repox, repoy);
-    [CHB] = detectOriginalValue(regionrange, rowDiv, colDiv, Bx, By, KB, repox, repoy);
+       %% 对Linehaul和Backhaul进行分簇
+        % 初始化簇首
+        [CHL] = detectOriginalValue(regionrange, rowDiv, colDiv, Lx, Ly, KL, repox, repoy);
+        [CHB] = detectOriginalValue(regionrange, rowDiv, colDiv, Bx, By, KB, repox, repoy);
 
-
-    % 分别分簇
-    if option.cluster4l
+        % 分别分簇
         [uL, centerL] = cluster(CHL, demandL, Lx, Ly, KL, capacity, 1);
         uL = int8(uL);
         clusterL = cell(KL);   % 每个簇的成员,1-linehaulnum   
@@ -64,18 +52,16 @@ function [totalcost] = routingalgorithm(dataset, option)
             mem = find(uL((i-1)*linehaulnum+1:i*linehaulnum)==1);
             clusterL{i} = mem;
         end
-    end
-    
-    %%%%%%%%%%%%%%%%%%%%%%%% cluster函数相关定义 %%%%%%%%%%%%%%%%%%%%%%%%%%
-    % cluster(center_ini, demand, samplex, sampley, cluster_num, capacity, option)
-    % center_ini: 簇首的初始位置
-    % demand:各个数据点的货物需求
-    % samplex, sampley: 数据点的x，y坐标
-    % option: 分簇模式，1表示整数规划，2表示无负载约束FCM，3表示有负载约束FCM
-    % 返回隶属矩阵u
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-    if option.cluster4b
+
+        %%%%%%%%%%%%%%%%%%%%%%%% cluster函数相关定义 %%%%%%%%%%%%%%%%%%%%%%%%%%
+        % cluster(center_ini, demand, samplex, sampley, cluster_num, capacity, option)
+        % center_ini: 簇首的初始位置
+        % demand:各个数据点的货物需求
+        % samplex, sampley: 数据点的x，y坐标
+        % option: 分簇模式，1表示整数规划，2表示无负载约束FCM，3表示有负载约束FCM
+        % 返回隶属矩阵u
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
         [uB, centerB] = cluster(CHB, demandB, Bx, By, KB, capacity, 1);
         uB = int8(uB);
         clusterB = cell(KB);   % 每个簇的成员, linehaulnum+1 - linehaulnum + backhaulnum
@@ -83,22 +69,20 @@ function [totalcost] = routingalgorithm(dataset, option)
             mem = find(uB((i-1)*backhaulnum+1:i*backhaulnum)==1);
             clusterB{i} = mem+linehaulnum;
         end
-    end
-%     save('origincluster.mat', 'clusterL', 'clusterB');
-    
-    %%%%%%%%%%%%%%%%%%% 画出初始分簇情况 %%%%%%%%%%%%%%%%%
-    if option.draworigincluster
-        figure(1);
-        drawcluster(clusterL, Lx, Ly, Bx, By, linehaulnum, regionrange);
-        figure(2);
-        drawcluster(clusterB, Lx, Ly, Bx, By, linehaulnum, regionrange);
-    end
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-    %% 针对Linehaul和Backhaul进行配对，形成簇
-    % 首先计算Linehaul和Backhaul簇心/仓库之间的距离
-    % load origincluster;
-    if option.AP
+    %     save('origincluster.mat', 'clusterL', 'clusterB');
+
+        %%%%%%%%%%%%%%%%%%% 画出初始分簇情况 %%%%%%%%%%%%%%%%%
+        if option.draworigincluster
+            figure(1);
+            drawcluster(clusterL, Lx, Ly, Bx, By, linehaulnum, regionrange);
+            figure(2);
+            drawcluster(clusterB, Lx, Ly, Bx, By, linehaulnum, regionrange);
+        end
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        %% 针对Linehaul和Backhaul进行配对，形成簇
+        % 首先计算Linehaul和Backhaul簇心/仓库之间的距离
+        % load origincluster;
         center_dist = zeros(KL, KL);
         for i = 1:KL
             for j = 1:KL
@@ -121,9 +105,18 @@ function [totalcost] = routingalgorithm(dataset, option)
                 big_cluster{i} = clusterL{i};
             end
         end
+       
+        
+    elseif option.cluster == 2  % 采用第二种分簇方法
+        clusterL = autocluster(demandL, Lx, Ly, capacity, K, repox, repoy);
+        clusterB = autocluster(demandB, Bx, By, capacity, K, repox, repoy);
+        big_cluster = cell(K);
+        for i = 1:K
+            big_cluster{i} = [clusterL{i}, clusterB{i}+linehaulnum];
+        end                 
     end
-%     filename = 'big_cluster.mat';
-%     save(filename, 'big_cluster');
+    %     filename = 'big_cluster.mat';
+    %     save(filename, 'big_cluster');
     
     %%%%%%%%%%%%%%%% 画出合并后分簇情况 %%%%%%%%%%%%%%%%%%%
     % load big_cluster;
@@ -136,8 +129,8 @@ function [totalcost] = routingalgorithm(dataset, option)
     %% 对各簇内结点求最佳路径
     % load big_cluster;
     totalcost = 0;
-    path = cell(KL);
-    for k = 1:KL
+    path = cell(K);
+    for k = 1:K
         mem = big_cluster{k};  % 簇内成员
         memlen = length(mem);  % 簇内成员数目
         linemem = mem(find(mem<=linehaulnum)); % linehaul节点，绝对定位
@@ -190,7 +183,7 @@ function [totalcost] = routingalgorithm(dataset, option)
 %     load big_cluster;
 %     load('best_path.mat');
     if option.drawfinalrouting
-        for i = 1:KL
+        for i = 1:K
             temp = path{i};
             path{i} = temp(2:end-1);  % 画图的path是去掉仓库节点0的
         end
