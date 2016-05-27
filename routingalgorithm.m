@@ -145,7 +145,7 @@ function [totalcost] = routingalgorithm(dataset, option)
             else
                 if i<=linehaulnum
                     if j <= linehaulnum
-                        dist_spot(i,j) = sqrt((Lx(i) - Bx(j))^2 + (Ly(i) - By(j))^2);
+                        dist_spot(i,j) = sqrt((Lx(i) - Lx(j))^2 + (Ly(i) - Ly(j))^2);
                     else
                         dist_spot(i,j) = sqrt((Lx(i) - Bx(j-linehaulnum))^2 + (Ly(i) - By(j-linehaulnum))^2);
                     end
@@ -181,21 +181,21 @@ function [totalcost] = routingalgorithm(dataset, option)
         path{k} = best_path;
     end
 %     filename = 'best_path.mat';
-%     save(filename, 'path');
-
+%     save(filename, 'path','dist_spot','dist_repo', 'demandL','demandB', 'capacity');
+%     load best_path
     %% local search
     % path1, path2, path3应当不包括仓库
     if option.localsearch
         % step1: insertion
         for i = 1:K
             path2 = path{i};
-            path2 = path2(2:end-1)
+            path2 = path2(2:end-1);
             if i == 1
                 path1 = path{K};
                 path1 = path1(2:end-1);
                 path3 = path{i+1};
                 path3 = path3(2:end-1);
-                [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, path3, dist_spot, dist_repo, demandL, demandB);
+                [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
                 newpath1 = [0 newpath1 0];
                 newpath2 = [0 newpath2 0];
                 newpath3 = [0 newpath3 0];
@@ -207,7 +207,7 @@ function [totalcost] = routingalgorithm(dataset, option)
                 path1 = path1(2:end-1);
                 path3 = path{1};
                 path3 = path3(2:end-1);
-                [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, path3, dist_spot, dist_repo, demandL, demandB);
+                [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
                 newpath1 = [0 newpath1 0];
                 newpath2 = [0 newpath2 0];
                 newpath3 = [0 newpath3 0];
@@ -219,7 +219,7 @@ function [totalcost] = routingalgorithm(dataset, option)
                 path1 = path1(2:end-1);
                 path3 = path{i+1};
                 path3 = path3(2:end-1);
-                [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, path3, dist_spot, dist_repo, demandL, demandB);
+                [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
                 newpath1 = [0 newpath1 0];
                 newpath2 = [0 newpath2 0];
                 newpath3 = [0 newpath3 0];
@@ -228,6 +228,7 @@ function [totalcost] = routingalgorithm(dataset, option)
                 path{i+1} = newpath3;
             end
             totalcost = totalcost + reducecost;
+            reducecost
         end
     end
     
@@ -240,7 +241,7 @@ function [totalcost] = routingalgorithm(dataset, option)
             path1 = path1(2:end-1);
             path3 = path{i+1};
             path3 = path3(2:end-1);
-            [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, path3, dist_spot, dist_repo, demandL, demandB);
+            [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
             newpath1 = [0 newpath1 0];
             newpath2 = [0 newpath2 0];
             newpath3 = [0 newpath3 0];
@@ -252,7 +253,7 @@ function [totalcost] = routingalgorithm(dataset, option)
             path1 = path1(2:end-1);
             path3 = path{1};
             path3 = path3(2:end-1);
-            [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, path3, dist_spot, dist_repo, demandL, demandB);
+            [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
             newpath1 = [0 newpath1 0];
             newpath2 = [0 newpath2 0];
             newpath3 = [0 newpath3 0];
@@ -264,7 +265,7 @@ function [totalcost] = routingalgorithm(dataset, option)
             path1 = path1(2:end-1);
             path3 = path{i+1};
             path3 = path3(2:end-1);
-            [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, path3, dist_spot, dist_repo, demandL, demandB);
+            [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
             newpath1 = [0 newpath1 0];
             newpath2 = [0 newpath2 0];
             newpath3 = [0 newpath3 0];
@@ -273,6 +274,7 @@ function [totalcost] = routingalgorithm(dataset, option)
             path{i+1} = newpath3;
         end
         totalcost = totalcost + reducecost;
+        reducecost
     end
 
     %% 把路径结果给画出来

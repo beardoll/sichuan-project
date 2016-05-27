@@ -1,8 +1,8 @@
-function [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, path3, dist_spot, dist_repo, demandL, demandB)
+function [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity)
     % 将path2的节点插入path1/path3
     % path1, path2, path3应当不包括仓库
     reducecost = 0;  % 通过insertion减少的代价（取负号）
-    linehaulnum = size(dist_spot, 1);
+    linehaulnum = length(demandL);
     stop = 0;
     cindex = 1;
     lineindex1 = find(path1 <= linehaulnum);
@@ -10,12 +10,24 @@ function [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, pa
     lineindex3 = find(path3 <= linehaulnum);
     backindex3 = find(path3 > linehaulnum);
     demand1L = sum(demandL(path1(lineindex1)));
-    demand1B = sum(demandB(path1(backindex1)-linehaulnum));
+    if isempty(backindex1) == 1  % 没有backhaul节点
+        demand1B = 0;
+    else
+        demand1B = sum(demandB(path1(backindex1)-linehaulnum));
+    end
     demand3L = sum(demandL(path3(lineindex3)));
-    demand3B = sum(demandB(path3(backindex3)-linehaulnum));
+    if isempty(backindex3) == 1  % 没有backhaul节点
+        demand3B = 0;
+    else
+        demand3B = sum(demandB(path3(backindex3)-linehaulnum));
+    end
     while stop == 0
         cpos = path2(cindex);
-        if cindex == 1
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%% 有可能会出现单点路径
+        
+        if cindex == 1   
             npos = path2(cindex+1);  % cpos的下一个节点
             savecost = dist_repo(npos) - dist_repo(cpos) - dist_spot(cpos,npos);
         elseif cindex == length(path2)
@@ -29,7 +41,7 @@ function [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, pa
         
         % 计算把cpos插入到path1和path3的最小代价
         % 先判断是否满足容量约束
-        if cpos <= linehaul % cpos是前向节点
+        if cpos <= linehaulnum % cpos是前向节点
             if demandL(cpos) + demand1L <= capacity
                 [insert_point1, M1] = caladdingcost(cpos, path1, linehaulnum, dist_spot, dist_repo);
             else
@@ -111,8 +123,13 @@ end
 function [insert_point, M] = caladdingcost(cpos, path, linehaulnum, dist_spot, dist_repo)
     % 计算把cpos插入到path中的最小增加代价
     linehaulbound = find(path > linehaulnum);
-    linehaulbound = linehaulbound(1);     % path的前向节点分界线
+    if isempty(linehaulbound) == 1  % 如果linehaulbound为空
+        linehaulbound = length(path);
+    else
+        linehaulbound = linehaulbound(1)-1;     % path的前向节点分界线
+    end
     M = inf;   % 插入到path的最小增加代价
+    insert_point = 0;
     if cpos <= linehaulnum  % cpos是前向节点
         for j = 1:linehaulbound+1  % 一共有这么多个可行插入点
             if j == 1
@@ -140,7 +157,7 @@ function [insert_point, M] = caladdingcost(cpos, path, linehaulnum, dist_spot, d
             end
         end
     else   % 插入点是后方节点
-        for j = linehaulnum : length(path)
+        for j = linehaulbound : length(path)
             if j == length(path)   % 插入点后方节点是仓库
                 ppos = path(end);
                 temp = dist_repo(cpos) + dist_spot(cpos,ppos) - dist_repo(ppos);
@@ -156,7 +173,7 @@ function [insert_point, M] = caladdingcost(cpos, path, linehaulnum, dist_spot, d
                     M = temp;
                     insert_point = j;  % 插入点前方节点
                 end
-            end
+            end           
         end
     end
 end

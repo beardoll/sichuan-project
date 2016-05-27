@@ -47,7 +47,8 @@ option.cluster = 2;
 option.drawbigcluster = 0;
 option.draworigincluster = 0;
 option.drawfinalrouting = 1;
-option.localsearch = 0;
+option.localsearch = 1;
+
 
 % Ö´ÐÐº¯Êý
 [totalcost] = routingalgorithm(dataset, option)

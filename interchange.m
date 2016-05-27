@@ -1,4 +1,4 @@
-function [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, path3, dist_spot, dist_repo, demandL, demandB)
+function [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity)
     % 把path2中的节点与path1/path3进行交换
     % path1, path2, path3应当不包括仓库
     reducecost = 0;  % 通过insertion减少的代价（取负号）
@@ -135,7 +135,7 @@ function [reducecost, interchange_point] = caladdcost(nodeindex, path2, path, di
                             M = temp;
                             interchange_point = i;
                         end
-                    elseif nodeindex == length(path)   % cpos2是路径的最后一个节点，连接仓库
+                    elseif nodeindex == length(path2)   % cpos2是路径的最后一个节点，连接仓库
                         ppos2 = path2(nodeindex-1);  % ppos2是path2路径当前节点的前一个节点
                         temp = -dist_repo(cpos2)-dist_spot(ppos2,cpos2)...
                             +dist_spot(ppos2, cpos)+dist_repo(cpos)...
@@ -169,59 +169,67 @@ function [reducecost, interchange_point] = caladdcost(nodeindex, path2, path, di
         else
             backindex = find(path > linehaulnum);  % path中backhaul节点标号
             backindex2 = find(path2 > linehaulnum);  % path2中backhaul节点标号
-            demand1B = sum(demandB(path(backindex)-linehaulnum));            
-            demand2B = sum(demandB(path2(backindex2)-linehaulnum));
-            for i =linebound+1:length(path)
-                cpos = path(i);
-                diff = demandB(cpos2-linehaulnum) - demandL(cpos-linehaulnum); % 交换给双方带来的负担差值，
-                if demand1B + diff > capacity || demand2B - diff > capacity
-                    continue;
-                else
-                    if i == length(path)   % i是path中的最后一个节点
-                        if nodeindex == length(path2)  % cpos2是path2路径中最后一个节点（无后向节点）
-                            ppos2 = path2(nodeindex-1);  % ppos2是path2当前节点的前一个节点
-                            ppos = path(i-1);   % ppos是path当前节点的前一个节点
-                            temp = -dist_spot(ppos,cpos)+dist_spot(ppos, cpos2)-dist_spot(ppos2, cpos2)+dist_spot(ppos2,cpos);
-                            if temp < M
-                                M = temp;
-                                interchange_point = i;
+            if isempty(backindex) == 1 % path中没有backhaul，没得交换
+                M = inf;
+                interchange_point = -1;
+            else
+                demand1B = sum(demandB(path(backindex)-linehaulnum));            
+                demand2B = sum(demandB(path2(backindex2)-linehaulnum));
+                for i =linebound+1:length(path)
+                    i;
+                    linebound+1;
+                    path;
+                    cpos = path(i);
+                    diff = demandB(cpos2-linehaulnum) - demandB(cpos-linehaulnum); % 交换给双方带来的负担差值，
+                    if demand1B + diff > capacity || demand2B - diff > capacity
+                        continue;
+                    else
+                        if i == length(path)   % i是path中的最后一个节点
+                            if nodeindex == length(path2)  % cpos2是path2路径中最后一个节点（无后向节点）
+                                ppos2 = path2(nodeindex-1);  % ppos2是path2当前节点的前一个节点
+                                ppos = path(i-1);   % ppos是path当前节点的前一个节点
+                                temp = -dist_spot(ppos,cpos)+dist_spot(ppos, cpos2)-dist_spot(ppos2, cpos2)+dist_spot(ppos2,cpos);
+                                if temp < M
+                                    M = temp;
+                                    interchange_point = i;
+                                end
+                            else   % cpos2是其他路径中间的节点
+                                ppos = path(i-1);   % ppos是path当前节点的前一个节点
+                                ppos2 = path2(nodeindex-1);  % ppos2是path2当前节点的前一个节点
+                                npos2 = path2(nodeindex+1);  % npos2是path2当前节点的下一个节点
+                                temp = -dist_spot(ppos2, cpos2)-dist_spot(cpos2, npos2)...
+                                    +dist_spot(ppos2, cpos)+dist_spot(cpos,npos2)...
+                                    -dist_spot(ppos, cpos)-dist_repo(cpos)...
+                                    +dist_spot(ppos, cpos2)+dist_repo(cpos2);
+                                if temp < M
+                                    M = temp;
+                                    interchange_point = i;
+                                end
                             end
-                        else   % cpos2是其他路径中间的节点
-                            ppos = path(i-1);   % ppos是path当前节点的前一个节点
-                            ppos2 = path2(nodeindex-1);  % ppos2是path2当前节点的前一个节点
-                            npos2 = path2(nodeindex+1);  % npos2是path2当前节点的下一个节点
-                            temp = -dist_spot(ppos2, cpos2)-dist_spot(cpos2, npos2)...
-                                +dist_spot(ppos2, cpos)+dist_spot(cpos,npos2)...
-                                -dist_spot(ppos, cpos)-dist_repo(cpos)...
-                                +dist_spot(ppos, cpos2)+dist_repo(cpos2);
-                            if temp < M
-                                M = temp;
-                                interchange_point = i;
-                            end
-                        end
-                    else  % i是path中其他路径中间节点
-                        ppos = path(i-1);  % ppos是path当前节点的前一个节点
-                        npos = path(i+1);  % npos是path当前节点的下一个节点
-                        if nodeindex == length(path)  
-                            ppos2 = path2(nodeindex-1); % ppos2是path2当前节点的前一个节点
-                            temp = -dist_repo(cpos2)-dist_spot(ppos2,cpos2)...
-                                +dist_spot(ppos2, cpos)+dist_repo(cpos)...
-                                -dist_spot(ppos,cpos)-dist_spot(cpos,npos)...
-                                +dist_spot(ppos, cpos2)+dist_spot(cpos2,npos);
-                            if temp < M
-                                M = temp;
-                                interchange_point = i;
-                            end
-                        else  % cpos2是其他路径中间的节点
-                            ppos2 = path2(nodeindex-1);  % ppos2是path2当前节点的前一个节点
-                            npos2 = path2(nodeindex+1); % npos2是path2当前节点的下一个节点
-                            temp = - dist_spot(ppos2,cpos2)-dist_spot(cpos2,npos2)...
-                                +dist_spot(ppos2,cpos)+dist_spot(cpos,npos2)...
-                                -dist_spot(ppos,cpos)-dist_spot(cpos,npos)...
-                                +dist_spot(ppos,cpos2)+dist_spot(cpos2,npos);
-                            if temp < M
-                                M = temp;
-                                interchange_point = i;
+                        else  % i是path中其他路径中间节点
+                            ppos = path(i-1);  % ppos是path当前节点的前一个节点
+                            npos = path(i+1);  % npos是path当前节点的下一个节点
+                            if nodeindex == length(path2)  
+                                ppos2 = path2(nodeindex-1); % ppos2是path2当前节点的前一个节点
+                                temp = -dist_repo(cpos2)-dist_spot(ppos2,cpos2)...
+                                    +dist_spot(ppos2, cpos)+dist_repo(cpos)...
+                                    -dist_spot(ppos,cpos)-dist_spot(cpos,npos)...
+                                    +dist_spot(ppos, cpos2)+dist_spot(cpos2,npos);
+                                if temp < M
+                                    M = temp;
+                                    interchange_point = i;
+                                end
+                            else  % cpos2是其他路径中间的节点
+                                ppos2 = path2(nodeindex-1);  % ppos2是path2当前节点的前一个节点
+                                npos2 = path2(nodeindex+1); % npos2是path2当前节点的下一个节点
+                                temp = - dist_spot(ppos2,cpos2)-dist_spot(cpos2,npos2)...
+                                    +dist_spot(ppos2,cpos)+dist_spot(cpos,npos2)...
+                                    -dist_spot(ppos,cpos)-dist_spot(cpos,npos)...
+                                    +dist_spot(ppos,cpos2)+dist_spot(cpos2,npos);
+                                if temp < M
+                                    M = temp;
+                                    interchange_point = i;
+                                end
                             end
                         end
                     end

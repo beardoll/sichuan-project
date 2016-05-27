@@ -3,7 +3,7 @@ function [] = drawpicture(path, Lx, Ly, Bx, By, repox, repoy, picturerange)
     linehaulnum = length(Lx);
     for i = 1:pathnum
         figure(i+20);
-        part_path = path{i}
+        part_path = path{i};
         plot([repox Lx(part_path(1))], [repoy Ly(part_path(1))], 'r-');
         axis(picturerange);
         hold on;

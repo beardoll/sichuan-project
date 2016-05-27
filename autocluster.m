@@ -62,6 +62,7 @@ function [cluster] = autocluster(demand, samplex, sampley, capacity, K, repox, r
     
     %% second step: 调整各簇成员
     % 对于当前负担最大的簇，检查其两边簇的负担，把其成员分配给负担较小的簇
+    % 对于簇负担最大的簇，挖出其离边线最近的点，转移到旁边的簇
     maxburden = max(burden);
     while maxburden > capacity
         clusterindex = find(burden == maxburden);
@@ -86,14 +87,22 @@ function [cluster] = autocluster(demand, samplex, sampley, capacity, K, repox, r
         end   
         clustermem = cluster{clusterindex};   % 簇成员
         memtanvalue = tanvalue(clustermem);
-        if burden(leftcluster) <= burden(rightcluster)  % 左边簇负担更小 
-            if frontangle < pi/2 && backangle > pi/2  || frontangle < 3/2*pi && backangle > 3/2*pi  % 跨区
+        
+        if rand <= 0.5    % 为了防止出现zigzag，随机选择交换到哪一边
+%         if burden(leftcluster) <= burden(rightcluster)  % 左边簇负担更小 
+            if frontangle < pi/2 && backangle > pi/2  || frontangle < 3/2*pi && backangle > 3/2*pi  % 跨区，选择正切值正数最小者转移
                 positiveindex = find(memtanvalue >= 0);
                 positivevalue = memtanvalue(positiveindex);
                 minindex = find(positivevalue == min(positivevalue));
-                minindex = minindex(1);  % 在positiveindex中的定位
-                realminindex = clustermem(positiveindex(minindex));  % 在clustermem中的绝对定位
-            else % 不跨区
+                if isempty(minindex) == 1  % 如果没有正数正切值，找负数正切值的最小者
+                    minindex = find(memtanvalue == min(memtanvalue));
+                    minindex = minindex(1);
+                    realminindex = clustermem(minindex);
+                else
+                    minindex = minindex(1);  % 在positiveindex中的定位
+                    realminindex = clustermem(positiveindex(minindex));  % 在clustermem中的绝对定位
+                end
+            else % 不跨区，选择正切值最小者转移
                 realminindex = find(memtanvalue == min(memtanvalue));
                 realminindex = realminindex(1);
                 realminindex = clustermem(realminindex);  % 在clustermem中的绝对定位
@@ -105,8 +114,14 @@ function [cluster] = autocluster(demand, samplex, sampley, capacity, K, repox, r
                 negativeindex = find(memtanvalue < 0);
                 negativevalue = memtanvalue(negativeindex);
                 maxindex = find(negativevalue == max(negativevalue));
-                maxindex = maxindex(1);   % 在negativeindex中的定位
-                realmaxindex = clustermem(negativeindex(maxindex));   % 在clustermem中的绝对定位
+                if isempty(maxindex) == 1  % 没有负数的节点，找正数正切值的最大者
+                    maxindex = find(memtanvalue == max(memtanvalue));
+                    maxindex = maxindex(1);
+                    realmaxindex = clustermem(maxindex);
+                else
+                    maxindex = maxindex(1);   % 在negativeindex中的定位
+                    realmaxindex = clustermem(negativeindex(maxindex));   % 在clustermem中的绝对定位
+                end
             else
                 realmaxindex = find(memtanvalue == max(memtanvalue));
                 realmaxindex = realmaxindex(1);
