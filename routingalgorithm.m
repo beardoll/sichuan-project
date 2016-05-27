@@ -15,6 +15,7 @@ function [totalcost] = routingalgorithm(dataset, option)
     %         draworigincluster: =1, 画初始簇分布
     %         drawbigcluster: =1，画backhaul和linehaul合并后的分簇结果
     %         drawfinalrouting: =1， 画最终路径图
+    %         localsearch: =1, 使用localsearch
     
     %%  赋值
     Lx = dataset.Lx;
@@ -125,7 +126,37 @@ function [totalcost] = routingalgorithm(dataset, option)
         drawcluster(big_cluster, Lx, Ly, Bx, By, linehaulnum, regionrange);
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                
+    
+    %% 计算节点之间的距离
+    dist_spot = zeros(linehaulnum+backhaulnum, linehaulnum+backhaulnum);
+    dist_repo = zeros(1, linehaulnum+backhaulnum);
+    for i = 1:length(dist_repo)
+        if i <= linehaulnum
+            dist_repo(i) = sqrt((Lx(i) - repox)^2 + (Ly(i) - repoy)^2);
+        else
+            dist_repo(i) = sqrt((Bx(i-linehaulnum) - repox)^2 + (By(i-linehaulnum) -repoy)^2);
+        end
+    end
+    
+    for i = 1:length(dist_repo)
+        for j = i:length(dist_repo)
+            if i == j
+                dist_spot(i,j) == inf;
+            else
+                if i<=linehaulnum
+                    if j <= linehaulnum
+                        dist_spot(i,j) = sqrt((Lx(i) - Bx(j))^2 + (Ly(i) - By(j))^2);
+                    else
+                        dist_spot(i,j) = sqrt((Lx(i) - Bx(j-linehaulnum))^2 + (Ly(i) - By(j-linehaulnum))^2);
+                    end
+                else
+                    dist_spot(i,j) = sqrt((Bx(i-linehaulnum) - Bx(j-linehaulnum))^2 + (By(i-linehaulnum) - By(j-linehaulnum))^2);
+                end
+            end
+            dist_spot(j,i) = dist_spot(i,j);
+        end
+    end
+    
     %% 对各簇内结点求最佳路径
     % load big_cluster;
     totalcost = 0;
@@ -134,34 +165,8 @@ function [totalcost] = routingalgorithm(dataset, option)
         mem = big_cluster{k};  % 簇内成员
         memlen = length(mem);  % 簇内成员数目
         linemem = mem(find(mem<=linehaulnum)); % linehaul节点，绝对定位
-        dist_spot = zeros(memlen, memlen);
-        for i = 1:memlen
-            dist_spot(i,i) = inf;
-            for j = i+1:memlen
-                if i <= length(linemem)    % 如果i是linehaul节点
-                    if j <= length(linemem) % 如果j是linehaul节点
-                        dist_spot(i,j) = sqrt((Lx(mem(i)) - Lx(mem(j)))^2 +...
-                            (Ly(mem(i)) - Ly(mem(j)))^2);
-                    else   % 如果j是backhaul节点
-                        dist_spot(i,j) = sqrt((Lx(mem(i)) - Bx(mem(j)-linehaulnum))^2 +...
-                            (Ly(mem(i)) - By(mem(j)-linehaulnum))^2);
-                    end
-                    dist_spot(j,i) = dist_spot(i,j);  % 对称性
-                else  % 如果w是backhaul节点，那么v也必然是backhaul节点
-                    dist_spot(i,j) = sqrt((Bx(mem(i)-linehaulnum) - Bx(mem(j)-linehaulnum))^2+...
-                        (By(mem(i)-linehaulnum) - By(mem(j)-linehaulnum))^2);
-                    dist_spot(j,i) = dist_spot(i,j);  % 对称性
-                end
-            end        
-        end
-        dist_repo = zeros(1,memlen);  % 仓库到各节点的距离
-        for i = 1:memlen
-            if i <= length(linemem) % 第i个点是linehaul节点
-                dist_repo(i) = sqrt((Lx(mem(i)) - repox)^2 + (Ly(mem(i)) - repoy)^2);
-            else
-                dist_repo(i) = sqrt((Bx(mem(i)-linehaulnum) - repox)^2 + (By(mem(i)-linehaulnum) - repoy)^2);
-            end
-        end
+        cdist_spot = dist_spot(mem, mem);
+        cdist_repo = dist_repo(mem);
         % [best_path] = branchbound(N, n, dist_spot, dist_repo)
         % n是linehaul的个数
         % N是节点总的个数
@@ -169,7 +174,7 @@ function [totalcost] = routingalgorithm(dataset, option)
         % dist_repo是各节点到仓库的距离
         fprintf('The path for %d cluster\n',k);
 %         [best_path, best_cost] = branchboundtight(memlen, length(linemem), dist_spot, dist_repo);
-        [best_path, best_cost] = TSPB_intprog(memlen, length(linemem), dist_spot, dist_repo);
+        [best_path, best_cost] = TSPB_intprog(memlen, length(linemem), cdist_spot, cdist_repo);
         totalcost = totalcost + best_cost;
         relative_pos = best_path(2:end-1);  % 第一个和最后一个节点是仓库
         best_path(2:end-1) = mem(relative_pos);  % 将路径中的标号换成绝对定位
@@ -178,6 +183,97 @@ function [totalcost] = routingalgorithm(dataset, option)
 %     filename = 'best_path.mat';
 %     save(filename, 'path');
 
+    %% local search
+    % path1, path2, path3应当不包括仓库
+    if option.localsearch
+        % step1: insertion
+        for i = 1:K
+            path2 = path{i};
+            path2 = path2(2:end-1)
+            if i == 1
+                path1 = path{K};
+                path1 = path1(2:end-1);
+                path3 = path{i+1};
+                path3 = path3(2:end-1);
+                [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, path3, dist_spot, dist_repo, demandL, demandB);
+                newpath1 = [0 newpath1 0];
+                newpath2 = [0 newpath2 0];
+                newpath3 = [0 newpath3 0];
+                path{K} = newpath1;
+                path{i} = newpath2;
+                path{i+1} = newpath3;
+            elseif i == K
+                path1 = path{i-1};
+                path1 = path1(2:end-1);
+                path3 = path{1};
+                path3 = path3(2:end-1);
+                [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, path3, dist_spot, dist_repo, demandL, demandB);
+                newpath1 = [0 newpath1 0];
+                newpath2 = [0 newpath2 0];
+                newpath3 = [0 newpath3 0];
+                path{i-1} = newpath1;
+                path{i} = newpath2;
+                path{1} = newpath3;
+            else
+                path1 = path{i-1};
+                path1 = path1(2:end-1);
+                path3 = path{i+1};
+                path3 = path3(2:end-1);
+                [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, path3, dist_spot, dist_repo, demandL, demandB);
+                newpath1 = [0 newpath1 0];
+                newpath2 = [0 newpath2 0];
+                newpath3 = [0 newpath3 0];
+                path{i-1} = newpath1;
+                path{i} = newpath2;
+                path{i+1} = newpath3;
+            end
+            totalcost = totalcost + reducecost;
+        end
+    end
+    
+    % step2: interchange
+    for i = 1:K
+        path2 = path{i};
+        path2 = path2(2:end-1);
+        if i == 1
+            path1 = path{K};
+            path1 = path1(2:end-1);
+            path3 = path{i+1};
+            path3 = path3(2:end-1);
+            [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, path3, dist_spot, dist_repo, demandL, demandB);
+            newpath1 = [0 newpath1 0];
+            newpath2 = [0 newpath2 0];
+            newpath3 = [0 newpath3 0];
+            path{K} = newpath1;
+            path{i} = newpath2;
+            path{i+1} = newpath3;
+        elseif i == K
+            path1 = path{i-1};
+            path1 = path1(2:end-1);
+            path3 = path{1};
+            path3 = path3(2:end-1);
+            [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, path3, dist_spot, dist_repo, demandL, demandB);
+            newpath1 = [0 newpath1 0];
+            newpath2 = [0 newpath2 0];
+            newpath3 = [0 newpath3 0];
+            path{i-1} = newpath1;
+            path{i} = newpath2;
+            path{1} = newpath3;
+        else
+            path1 = path{i-1};
+            path1 = path1(2:end-1);
+            path3 = path{i+1};
+            path3 = path3(2:end-1);
+            [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, path3, dist_spot, dist_repo, demandL, demandB);
+            newpath1 = [0 newpath1 0];
+            newpath2 = [0 newpath2 0];
+            newpath3 = [0 newpath3 0];
+            path{i-1} = newpath1;
+            path{i} = newpath2;
+            path{i+1} = newpath3;
+        end
+        totalcost = totalcost + reducecost;
+    end
 
     %% 把路径结果给画出来
 %     load big_cluster;

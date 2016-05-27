@@ -4,10 +4,10 @@ xrange = [0 24000];   % 横坐标范围
 yrange = [0 32000];   % 纵坐标范围
 repox = 12000;        % 仓库x坐标
 repoy = 16000;        % 仓库y坐标
-linehaulnum = 30;     % 前向节点个数
-backhaulnum = 30;      % 后向节点个数
-carnum = 6;           % 货车车辆数
-capacity = 3000;      % 车容量
+linehaulnum = 45;     % 前向节点个数
+backhaulnum = 23;      % 后向节点个数
+carnum = 5;           % 货车车辆数
+capacity = 5100;      % 车容量
 Lx = zeros(linehaulnum, 1);   % 前向节点横坐标
 Ly = zeros(linehaulnum, 1);   % 前向节点纵坐标
 demandL = zeros(linehaulnum, 1);
@@ -47,6 +47,7 @@ option.cluster = 2;
 option.drawbigcluster = 0;
 option.draworigincluster = 0;
 option.drawfinalrouting = 1;
+option.localsearch = 0;
 
 % 执行函数
 [totalcost] = routingalgorithm(dataset, option)
@@ -63,3 +64,4 @@ option.drawfinalrouting = 1;
     %         draworigincluster: =1, 画初始簇分布
     %         drawbigcluster: =1，画backhaul和linehaul合并后的分簇结果
     %         drawfinalrouting: =1， 画最终路径图
+    %         localsearch: =1, 使用localsearch
