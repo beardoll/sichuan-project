@@ -4,8 +4,16 @@ function [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, 
     reducecost = 0;  % 通过insertion减少的代价（取负号）
     % 在进行interchange的时候必须满足容量约束
     for i = 1:length(path2)
-        [M1, changep1] = caladdcost(i, path2, path1, dist_spot, dist_repo, capacity, demandL, demandB);
-        [M3, changep3] = caladdcost(i, path2, path3, dist_spot, dist_repo, capacity, demandL, demandB);
+        if length(path1) == 0  % path1没有路径，不允许交换
+            M1 = inf;
+        else
+            [M1, changep1] = caladdcost(i, path2, path1, dist_spot, dist_repo, capacity, demandL, demandB);
+        end
+        if length(path3) == 0
+            M3 = inf;
+        else
+            [M3, changep3] = caladdcost(i, path2, path3, dist_spot, dist_repo, capacity, demandL, demandB);
+        end
         if M1 == inf && M3 == inf  % 不可交换
             continue;
         else
@@ -61,100 +69,161 @@ function [reducecost, interchange_point] = caladdcost(nodeindex, path2, path, di
             if demand1L + diff > capacity || demand2L - diff > capacity  %  交换后至少有一方超容量，则不可交换
                 continue;
             else
-                if i == 1  % 从仓库出来的第一个节点
-                    if nodeindex == 1  % cpos2是从仓库出来的第一个节点
-                        npos2 = path2(nodeindex+1);   % path2当前选中节点的下一个节点
-                        npos = path(i+1);   % path当前选中节点的下一个节点
-                        temp = - dist_spot(cpos2, npos2) + dist_spot(cpos,npos2) - dist_spot(cpos, npos) + dist_spot(cpos2, npos);
-                        if temp < M
-                            M = temp;
-                            interchange_point = i;  % path中的interchange节点
-                        end
-                    elseif nodeindex == length(path2)  % path2路径中最后一个节点（无后向节点）
-                        ppos2 = path2(nodeindex-1);  % path2当前选中节点的前一个节点
-                        npos = path(i+1);  % path当前选中节点的下一个节点
-                        temp = -dist_spot(ppos2, cpos2)+dist_spot(ppos2, cpos)-dist_spot(cpos, npos)+dist_spot(cpos2, npos);
-                        if temp < M
-                            M = temp;
-                            interchange_point = i;
-                        end
-                    else   % cpos2是其他路径中间的节点
-                        npos = path(i+1);   % path当前节点的下一个节点
-                        ppos2 = path2(nodeindex-1);  % path2当前节点的前一个节点
-                        npos2 = path2(nodeindex+1);  % path2当前节点的前一个节点
-                        temp = -dist_spot(ppos2, cpos2) - dist_spot(cpos2, npos2)...
-                            +dist_spot(ppos2, cpos) + dist_spot(cpos, npos2)...
-                            -dist_repo(cpos) - dist_spot(cpos, npos)...
-                            +dist_repo(cpos2) + dist_spot(cpos2, npos);
-                        if temp < M
-                            M = temp;
-                            interchange_point = i;
-                        end
-                    end
-                elseif i == length(path)  %  path路径中最后一个节点（无后向节点）
-                    cpos = path(i);
-                    if nodeindex == 1   % cpos2是从仓库出来的第一个节点
-                        npos2 = path2(nodeindex+1);   % path2当前节点的前一个节点
-                        ppos = path(i-1);    % path当前节点的前一个
-                        temp = - dist_spot(cpos2,npos2) + dist_spot(cpos, npos2) - dist_spot(cpos, ppos) + dist_spot(ppos, cpos2);
-                        if temp < M
-                            M = temp;
-                            interchange_point = i;
-                        end
-                    elseif nodeindex == length(path2)  % path2路径中最后一个节点（无后向节点）
-                        ppos2 = path2(nodeindex-1);  % path2当前节点的前一个节点
-                        ppos = path(i-1);     % path当前节点的前一个节点
-                        temp = -dist_spot(ppos,cpos)+dist_spot(ppos, cpos2)-dist_spot(ppos2, cpos2)+dist_spot(ppos2,cpos);
-                        if temp < M
-                            M = temp;
-                            interchange_point = i;
-                        end
-                    else    % cpos2是其他路径中间的节点
-                        ppos = path(i-1);   % path路径当前节点的前一个节点
-                        ppos2 = path2(nodeindex-1);  % path2路径当前节点的前一个节点
-                        npos2 = path2(nodeindex+1);  % path2路径当前节点的下一个节点
-                        temp = -dist_spot(ppos2, cpos2)-dist_spot(cpos2, npos2)...
-                            +dist_spot(ppos2, cpos)+dist_spot(cpos,npos2)...
-                            -dist_spot(ppos, cpos)-dist_repo(cpos)...
-                            +dist_spot(ppos, cpos2)+dist_repo(cpos2);
-                        if temp < M
-                            M = temp;
-                            interchange_point = i;
+                if i == 1 && length(path) == 1
+                    if nodeindex == 1 && length(path2) == 1   % 两条路径都只有一个节点
+                        M = inf;
+                        interchange_point = 1;
+                    else
+                        if nodeindex == 1
+                            npos2 = path2(nodeindex+1);
+                            temp = -dist_repo(cpos)+dist_repo(cpos2)-dist_spot(cpos2,npos2)+dist_spot(cpos,npos2);
+                            if temp < M
+                                M = temp;
+                                interchange_point = i;
+                            end
+                        elseif nodeindex == length(path2)
+                            ppos2 = path2(nodeindex-1);
+                            temp = -dist_repo(cpos)+dist_repo(cpos2)-dist_spot(cpos2,ppos2)+dist_spot(ppos2,cpos);
+                            if temp < M
+                                M = temp;
+                                interchange_point = i;
+                            end
+                        else
+                            ppos2 = path2(nodeindex-1);
+                            npos2 = path2(nodeindex+1);
+                            temp = -dist_repo(cpos)+dist_repo(cpos2)...
+                                -dist_spot(ppos2,cpos2)-dist_spot(cpos2,npos2)...
+                                +dist_spot(ppos2,cpos)+dist_spot(cpos,npos2);
+                            if temp < M
+                                M = temp;
+                                interchange_point = i;
+                            end
                         end
                     end
-                else   % i是path路径中间的一个节点
-                    ppos = path(i-1);  % ppos是path路径当前节点的前一个节点
-                    npos = path(i+1);  % npos是path路径当前节点的下一个节点
-                    if nodeindex == 1    % cpos2是从仓库出来的第一个节点
-                        npos2 = path2(nodeindex+1);
-                        temp = -dist_repo(cpos2)-dist_spot(cpos2, npos2)...
-                            +dist_spot(cpos, npos2)+dist_repo(cpos)...
-                            -dist_spot(ppos, cpos)-dist_spot(cpos,npos)...
-                            +dist_spot(ppos, cpos2)+dist_spot(cpos2,npos);
-                        if temp < M
-                            M = temp;
-                            interchange_point = i;
+                else
+                    if i == 1  % 从仓库出来的第一个节点
+                        if nodeindex == 1 && length(path2) == 1  % 唯一节点
+                            npos = path(i+1);   % path当前选中节点的下一个节点
+                            temp = -dist_repo(cpos2) + dist_repo(cpos) - dist_spot(cpos,npos) + dist_spot(cpos2,npos);
+                            if temp < M
+                                M = temp;
+                                interchange_point = i;  % path中的interchange节点
+                            end
+                        else
+                            if nodeindex == 1  % cpos2是从仓库出来的第一个节点
+                                npos2 = path2(nodeindex+1);   % path2当前选中节点的下一个节点
+                                npos = path(i+1);   % path当前选中节点的下一个节点
+                                temp = - dist_spot(cpos2, npos2) + dist_spot(cpos,npos2) - dist_spot(cpos, npos) + dist_spot(cpos2, npos);
+                                if temp < M
+                                    M = temp;
+                                    interchange_point = i;  % path中的interchange节点
+                                end
+                            elseif nodeindex == length(path2)  % path2路径中最后一个节点（无后向节点）
+                                ppos2 = path2(nodeindex-1);  % path2当前选中节点的前一个节点
+                                npos = path(i+1);  % path当前选中节点的下一个节点
+                                temp = -dist_spot(ppos2, cpos2)+dist_spot(ppos2, cpos)-dist_spot(cpos, npos)+dist_spot(cpos2, npos);
+                                if temp < M
+                                    M = temp;
+                                    interchange_point = i;
+                                end
+                            else   % cpos2是其他路径中间的节点
+                                npos = path(i+1);   % path当前节点的下一个节点
+                                ppos2 = path2(nodeindex-1);  % path2当前节点的前一个节点
+                                npos2 = path2(nodeindex+1);  % path2当前节点的前一个节点
+                                temp = -dist_spot(ppos2, cpos2) - dist_spot(cpos2, npos2)...
+                                    +dist_spot(ppos2, cpos) + dist_spot(cpos, npos2)...
+                                    -dist_repo(cpos) - dist_spot(cpos, npos)...
+                                    +dist_repo(cpos2) + dist_spot(cpos2, npos);
+                                if temp < M
+                                    M = temp;
+                                    interchange_point = i;
+                                end
+                            end
                         end
-                    elseif nodeindex == length(path2)   % cpos2是路径的最后一个节点，连接仓库
-                        ppos2 = path2(nodeindex-1);  % ppos2是path2路径当前节点的前一个节点
-                        temp = -dist_repo(cpos2)-dist_spot(ppos2,cpos2)...
-                            +dist_spot(ppos2, cpos)+dist_repo(cpos)...
-                            -dist_spot(ppos,cpos)-dist_spot(cpos,npos)...
-                            +dist_spot(ppos, cpos2)+dist_spot(cpos2,npos);
-                        if temp < M
-                            M = temp;
-                            interchange_point = i;
+                    elseif i == length(path)  %  path路径中最后一个节点（无后向节点）
+                        cpos = path(i);
+                        if nodeindex == 1 && length(path2) == 1  % 唯一节点
+                            ppos = path(i-1);    % path当前节点的前一个
+                            temp = -dist_repo(cpos2) + dist_repo(cpos) - dist_spot(ppos,cpos) + dist_spot(ppos, cpos2);
+                            if temp < M
+                                M = temp;
+                                interchange_point = i;
+                            end
+                        else    
+                            if nodeindex == 1   % cpos2是从仓库出来的第一个节点
+                                npos2 = path2(nodeindex+1);   % path2当前节点的前一个节点
+                                ppos = path(i-1);    % path当前节点的前一个
+                                temp = - dist_spot(cpos2,npos2) + dist_spot(cpos, npos2) - dist_spot(cpos, ppos) + dist_spot(ppos, cpos2);
+                                if temp < M
+                                    M = temp;
+                                    interchange_point = i;
+                                end
+                            elseif nodeindex == length(path2)  % path2路径中最后一个节点（无后向节点）
+                                ppos2 = path2(nodeindex-1);  % path2当前节点的前一个节点
+                                ppos = path(i-1);     % path当前节点的前一个节点
+                                temp = -dist_spot(ppos,cpos)+dist_spot(ppos, cpos2)-dist_spot(ppos2, cpos2)+dist_spot(ppos2,cpos);
+                                if temp < M
+                                    M = temp;
+                                    interchange_point = i;
+                                end
+                            else    % cpos2是其他路径中间的节点
+                                ppos = path(i-1);   % path路径当前节点的前一个节点
+                                ppos2 = path2(nodeindex-1);  % path2路径当前节点的前一个节点
+                                npos2 = path2(nodeindex+1);  % path2路径当前节点的下一个节点
+                                temp = -dist_spot(ppos2, cpos2)-dist_spot(cpos2, npos2)...
+                                    +dist_spot(ppos2, cpos)+dist_spot(cpos,npos2)...
+                                    -dist_spot(ppos, cpos)-dist_repo(cpos)...
+                                    +dist_spot(ppos, cpos2)+dist_repo(cpos2);
+                                if temp < M
+                                    M = temp;
+                                    interchange_point = i;
+                                end
+                            end
                         end
-                    else    % cpos2是其他路径中间的节点
-                        ppos2 = path2(nodeindex-1);  % ppos2是path2路径当前节点的前一个节点
-                        npos2 = path2(nodeindex+1);  % npos2是path2路径当前节点的下一个节点
-                        temp = - dist_spot(ppos2,cpos2)-dist_spot(cpos2,npos2)...
-                            +dist_spot(ppos2,cpos)+dist_spot(cpos,npos2)...
-                            -dist_spot(ppos,cpos)-dist_spot(cpos,npos)...
-                            +dist_spot(ppos,cpos2)+dist_spot(cpos2,npos);
-                        if temp < M
-                            M = temp;
-                            interchange_point = i;
+                   else   % i是path路径中间的一个节点
+                        ppos = path(i-1);  % ppos是path路径当前节点的前一个节点
+                        npos = path(i+1);  % npos是path路径当前节点的下一个节点
+                        if nodeindex == 1 && length(path2) == 1   % 唯一节点
+                            temp = -dist_repo(cpos2)+dist_repo(cpos)...
+                                -dist_spot(ppos, cpos)-dist_spot(cpos, npos)...
+                                +dist_spot(ppos, cpos2)+dist_spot(cpos2, npos);
+                            if temp < M
+                                M = temp;
+                                interchange_point = i;
+                            end
+                        else
+                            if nodeindex == 1    % cpos2是从仓库出来的第一个节点
+                                npos2 = path2(nodeindex+1);
+                                temp = -dist_repo(cpos2)-dist_spot(cpos2, npos2)...
+                                    +dist_spot(cpos, npos2)+dist_repo(cpos)...
+                                    -dist_spot(ppos, cpos)-dist_spot(cpos,npos)...
+                                    +dist_spot(ppos, cpos2)+dist_spot(cpos2,npos);
+                                if temp < M
+                                    M = temp;
+                                    interchange_point = i;
+                                end
+                            elseif nodeindex == length(path2)   % cpos2是路径的最后一个节点，连接仓库
+                                ppos2 = path2(nodeindex-1);  % ppos2是path2路径当前节点的前一个节点
+                                temp = -dist_repo(cpos2)-dist_spot(ppos2,cpos2)...
+                                    +dist_spot(ppos2, cpos)+dist_repo(cpos)...
+                                    -dist_spot(ppos,cpos)-dist_spot(cpos,npos)...
+                                    +dist_spot(ppos, cpos2)+dist_spot(cpos2,npos);
+                                if temp < M
+                                    M = temp;
+                                    interchange_point = i;
+                                end
+                            else    % cpos2是其他路径中间的节点
+                                ppos2 = path2(nodeindex-1);  % ppos2是path2路径当前节点的前一个节点
+                                npos2 = path2(nodeindex+1);  % npos2是path2路径当前节点的下一个节点
+                                temp = - dist_spot(ppos2,cpos2)-dist_spot(cpos2,npos2)...
+                                    +dist_spot(ppos2,cpos)+dist_spot(cpos,npos2)...
+                                    -dist_spot(ppos,cpos)-dist_spot(cpos,npos)...
+                                    +dist_spot(ppos,cpos2)+dist_spot(cpos2,npos);
+                                if temp < M
+                                    M = temp;
+                                    interchange_point = i;
+                                end
+                            end
                         end
                     end
                 end
@@ -176,9 +245,6 @@ function [reducecost, interchange_point] = caladdcost(nodeindex, path2, path, di
                 demand1B = sum(demandB(path(backindex)-linehaulnum));            
                 demand2B = sum(demandB(path2(backindex2)-linehaulnum));
                 for i =linebound+1:length(path)
-                    i;
-                    linebound+1;
-                    path;
                     cpos = path(i);
                     diff = demandB(cpos2-linehaulnum) - demandB(cpos-linehaulnum); % 交换给双方带来的负担差值，
                     if demand1B + diff > capacity || demand2B - diff > capacity

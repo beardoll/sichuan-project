@@ -6,6 +6,7 @@ function [cluster] = autocluster(demand, samplex, sampley, capacity, K, repox, r
     % K:车辆数，即分簇的数目
     % repox, repoy:仓库的x、y坐标
     
+    largenum = 100000;
     %% first step: 初步分簇
     num = length(samplex);
     tanvalue = zeros(1,num);
@@ -14,7 +15,16 @@ function [cluster] = autocluster(demand, samplex, sampley, capacity, K, repox, r
         tanvalue(i) = (sampley(i) - repoy)/(samplex(i) - repox);
     end
     angle = 0:2*pi/K:2*pi*(K-1)/K;
-    bound = tan(angle);  % 分界线的正切值
+    bound = zeros(1,length(angle));% 分界线的正切值
+    for i = 1:length(angle)
+        if angle(i) == pi/2
+            bound(i) = largenum;
+        elseif angle(i) == 3*pi/2
+            bound(i) = largenum;
+        else
+            bound(i) = tan(angle(i));
+        end
+    end 
     cluster = cell(K);   % 共分成K个簇
     burden = zeros(1,K); % 各簇的货物量总和  
     for i = 1:K
@@ -22,17 +32,28 @@ function [cluster] = autocluster(demand, samplex, sampley, capacity, K, repox, r
     end
     for i = 1:num
         temptan = tanvalue(i);
+        index = -1;
         for j = 1:K
             if j == K  % 如果这是最后一个簇，那么前边界应该是bound(end)，后边界是bound(1)
                 frontbound = bound(end);
                 backbound = bound(1);
                 frontangle = angle(end);
                 backangle = angle(1);
+                if frontbound == largenum
+                    frontbound = -largenum;
+                elseif backbound == largenum
+                    backbound = largenum;
+                end
             else     % 如果这不是最后一个簇，那么前就是前，后就是后
                 frontbound = bound(j);
                 backbound = bound(j+1);
                 frontangle = angle(j);
                 backangle = angle(j+1);
+                if frontbound == largenum
+                    frontbound = -largenum;
+                elseif backbound == largenum
+                    backbound = largenum;
+                end
             end
             if frontangle < pi/2 && backangle > pi/2  || frontangle < 3/2*pi && backangle > 3/2*pi   
                 % 分界线跨区(tan函数的无穷间断点)
@@ -56,8 +77,12 @@ function [cluster] = autocluster(demand, samplex, sampley, capacity, K, repox, r
                 end
             end
         end
-        cluster{index} = [cluster{index}, i];
-        burden(index) = burden(index) + demand(i);
+        if index == -1;
+            continue;
+        else
+            cluster{index} = [cluster{index}, i];
+            burden(index) = burden(index) + demand(i);
+        end
     end
     
     %% second step: 调整各簇成员
@@ -72,8 +97,8 @@ function [cluster] = autocluster(demand, samplex, sampley, capacity, K, repox, r
             leftcluster = K;
             rightcluster = 2;
         elseif clusterindex == K
-            leftcluster = K-1;
-            rightcluster = 1;
+            leftcluster = 1;
+            rightcluster = K-1;
         else
             leftcluster = clusterindex - 1;
             rightcluster = clusterindex + 1;

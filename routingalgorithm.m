@@ -112,9 +112,52 @@ function [totalcost] = routingalgorithm(dataset, option)
         clusterL = autocluster(demandL, Lx, Ly, capacity, K, repox, repoy);
         clusterB = autocluster(demandB, Bx, By, capacity, K, repox, repoy);
         big_cluster = cell(K);
+        left_backhaul = [];
+        for i = 1:K
+            if isempty(clusterL{i}) == 1 && isempty(clusterB{i}) == 0  % 某个区域内只有backhaul没有linehaul
+                fprintf('sb!\n');
+                stop = 0;
+                searchrange = 1;
+                while stop == 0
+                    if i + searchrange > K
+                        rightcluster = i + searchrange - K;
+                        leftcluster = i - searchrange;
+                    elseif i - searchrange < 0
+                        leftcluster = i - searchrange + K + 1;
+                        rightcluster = K-1;
+                    else
+                        leftcluster = i - searchrange;
+                        rightcluster = i + searchrange;
+                    end
+                    if length(clusterL{leftcluster}) == 1 && length(clusterB{leftcluster}) ~= 0 ||...
+                            length(clusterL{leftcluster}) == 0
+                        if  length(clusterL{rightcluster}) == 1 && length(clusterB{rightcluster}) ~= 0 ||...
+                            length(clusterL{rightcluster}) == 0
+                            searchrange = searchrange + 1;
+                        else
+                            clustermem = clusterL(rightcluster);
+                            index = randi([1 length(clustermem)]);
+                            memchoice = clustermem(index);
+                            clustermem(index) = [];
+                            clusterL(rightcluster) = clustermem;
+                            clusterL{i} = memchoice;
+                            stop == 1;
+                        end
+                    else
+                        clustermem = clusterL(leftcluster);
+                        index = randi([1 length(clustermem)]);
+                        memchoice = clustermem(index);
+                        clustermem(index) = [];
+                        clusterL{i} = clustermem;
+                        clusterL{i} = memchoice;   
+                        stop == 1;
+                    end
+                end
+            end
+        end
         for i = 1:K
             big_cluster{i} = [clusterL{i}, clusterB{i}+linehaulnum];
-        end                 
+        end
     end
     %     filename = 'big_cluster.mat';
     %     save(filename, 'big_cluster');
@@ -174,11 +217,15 @@ function [totalcost] = routingalgorithm(dataset, option)
         % dist_repo是各节点到仓库的距离
         fprintf('The path for %d cluster\n',k);
 %         [best_path, best_cost] = branchboundtight(memlen, length(linemem), dist_spot, dist_repo);
-        [best_path, best_cost] = TSPB_intprog(memlen, length(linemem), cdist_spot, cdist_repo);
-        totalcost = totalcost + best_cost;
-        relative_pos = best_path(2:end-1);  % 第一个和最后一个节点是仓库
-        best_path(2:end-1) = mem(relative_pos);  % 将路径中的标号换成绝对定位
-        path{k} = best_path;
+        if memlen == 0   % 空路径
+            path{k} = [0 0];
+        else
+            [best_path, best_cost] = TSPB_intprog(memlen, length(linemem), cdist_spot, cdist_repo);
+            totalcost = totalcost + best_cost;
+            relative_pos = best_path(2:end-1);  % 第一个和最后一个节点是仓库
+            best_path(2:end-1) = mem(relative_pos);  % 将路径中的标号换成绝对定位
+            path{k} = best_path;
+        end
     end
 %     filename = 'best_path.mat';
 %     save(filename, 'path','dist_spot','dist_repo', 'demandL','demandB', 'capacity');
@@ -189,13 +236,65 @@ function [totalcost] = routingalgorithm(dataset, option)
         % step1: insertion
         for i = 1:K
             path2 = path{i};
+            if length(path2) == 2
+                continue;
+            else
+                path2 = path2(2:end-1);
+                if i == 1
+                    path1 = path{K};
+                    path1 = path1(2:end-1);
+                    path3 = path{i+1};
+                    path3 = path3(2:end-1);
+                    [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
+                    newpath1 = [0 newpath1 0];
+                    newpath2 = [0 newpath2 0];
+                    newpath3 = [0 newpath3 0];
+                    path{K} = newpath1;
+                    path{i} = newpath2;
+                    path{i+1} = newpath3;
+                elseif i == K
+                    path1 = path{i-1};
+                    path1 = path1(2:end-1);
+                    path3 = path{1};
+                    path3 = path3(2:end-1);
+                    [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
+                    newpath1 = [0 newpath1 0];
+                    newpath2 = [0 newpath2 0];
+                    newpath3 = [0 newpath3 0];
+                    path{i-1} = newpath1;
+                    path{i} = newpath2;
+                    path{1} = newpath3;
+                else
+                    path1 = path{i-1};
+                    path1 = path1(2:end-1);
+                    path3 = path{i+1};
+                    path3 = path3(2:end-1);
+                    [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
+                    newpath1 = [0 newpath1 0];
+                    newpath2 = [0 newpath2 0];
+                    newpath3 = [0 newpath3 0];
+                    path{i-1} = newpath1;
+                    path{i} = newpath2;
+                    path{i+1} = newpath3;
+                end
+                totalcost = totalcost + reducecost;
+                reducecost
+            end
+        end
+    
+    % step2: interchange
+    for i = 1:K
+        path2 = path{i};
+        if length(path2) == 2
+            continue;
+        else
             path2 = path2(2:end-1);
             if i == 1
                 path1 = path{K};
                 path1 = path1(2:end-1);
                 path3 = path{i+1};
                 path3 = path3(2:end-1);
-                [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
+                [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
                 newpath1 = [0 newpath1 0];
                 newpath2 = [0 newpath2 0];
                 newpath3 = [0 newpath3 0];
@@ -207,7 +306,7 @@ function [totalcost] = routingalgorithm(dataset, option)
                 path1 = path1(2:end-1);
                 path3 = path{1};
                 path3 = path3(2:end-1);
-                [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
+                [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
                 newpath1 = [0 newpath1 0];
                 newpath2 = [0 newpath2 0];
                 newpath3 = [0 newpath3 0];
@@ -219,7 +318,7 @@ function [totalcost] = routingalgorithm(dataset, option)
                 path1 = path1(2:end-1);
                 path3 = path{i+1};
                 path3 = path3(2:end-1);
-                [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
+                [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
                 newpath1 = [0 newpath1 0];
                 newpath2 = [0 newpath2 0];
                 newpath3 = [0 newpath3 0];
@@ -231,51 +330,8 @@ function [totalcost] = routingalgorithm(dataset, option)
             reducecost
         end
     end
-    
-    % step2: interchange
-    for i = 1:K
-        path2 = path{i};
-        path2 = path2(2:end-1);
-        if i == 1
-            path1 = path{K};
-            path1 = path1(2:end-1);
-            path3 = path{i+1};
-            path3 = path3(2:end-1);
-            [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
-            newpath1 = [0 newpath1 0];
-            newpath2 = [0 newpath2 0];
-            newpath3 = [0 newpath3 0];
-            path{K} = newpath1;
-            path{i} = newpath2;
-            path{i+1} = newpath3;
-        elseif i == K
-            path1 = path{i-1};
-            path1 = path1(2:end-1);
-            path3 = path{1};
-            path3 = path3(2:end-1);
-            [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
-            newpath1 = [0 newpath1 0];
-            newpath2 = [0 newpath2 0];
-            newpath3 = [0 newpath3 0];
-            path{i-1} = newpath1;
-            path{i} = newpath2;
-            path{1} = newpath3;
-        else
-            path1 = path{i-1};
-            path1 = path1(2:end-1);
-            path3 = path{i+1};
-            path3 = path3(2:end-1);
-            [newpath1, newpath2, newpath3, reducecost] = interchange(path1, path2, path3, dist_spot, dist_repo, demandL, demandB, capacity);
-            newpath1 = [0 newpath1 0];
-            newpath2 = [0 newpath2 0];
-            newpath3 = [0 newpath3 0];
-            path{i-1} = newpath1;
-            path{i} = newpath2;
-            path{i+1} = newpath3;
-        end
-        totalcost = totalcost + reducecost;
-        reducecost
     end
+
 
     %% 把路径结果给画出来
 %     load big_cluster;
@@ -283,7 +339,11 @@ function [totalcost] = routingalgorithm(dataset, option)
     if option.drawfinalrouting
         for i = 1:K
             temp = path{i};
-            path{i} = temp(2:end-1);  % 画图的path是去掉仓库节点0的
+            if length(temp) == 2
+                path{i} = [];
+            else
+                path{i} = temp(2:end-1);  % 画图的path是去掉仓库节点0的
+            end
         end
         drawpicture(path, Lx, Ly, Bx, By, repox, repoy, regionrange);
     end
