@@ -97,8 +97,8 @@ function [cluster] = autocluster(demand, samplex, sampley, capacity, K, repox, r
             leftcluster = K;
             rightcluster = 2;
         elseif clusterindex == K
-            leftcluster = 1;
-            rightcluster = K-1;
+            leftcluster = K-1;
+            rightcluster = 1;
         else
             leftcluster = clusterindex - 1;
             rightcluster = clusterindex + 1;
