@@ -34,16 +34,19 @@ function [newpath1, newpath2, newpath3, reducecost] = insertion(path1, path2, pa
     
     while stop == 0
         cpos = path2(cindex);
-        
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %%%%%%%%%%%%%%%%%%%%%%%%%%% 有可能会出现单点路径
-        if cindex == 1 && cindex == length(path2)  % 是此路径中的唯一节点 
-            savecost = -2*dist_repo(cpos);
-        else  % 不是此路径中的唯一节点 
-            if cindex == 1    
-                npos = path2(cindex+1);  % cpos的下一个节点
+        if cindex == 1 
+            if cindex == length(path2)  % 是此路径中的唯一节点 
+                savecost = -2*dist_repo(cpos);
+            elseif path2(2) > linehaulnum % 只剩下唯一个linehual节点了
+                savecost = 0;
+                cindex = cindex + 1;
+                continue;
+            else
+                npos = path2(cindex+1); % cpos的下一个节点
                 savecost = dist_repo(npos) - dist_repo(cpos) - dist_spot(cpos,npos);
-            elseif cindex == length(path2) 
+            end
+        else  % 不是此路径中的唯一节点 
+            if cindex == length(path2) 
                 ppos = path2(cindex-1);  % cpos的前一个节点
                 savecost = dist_repo(ppos) - dist_repo(cpos) - dist_spot(ppos, cpos);
             else
@@ -192,6 +195,7 @@ function [insert_point, M] = caladdingcost(cpos, path, linehaulnum, dist_spot, d
                         insert_point = length(path);
                     end
                 else
+                    save('hehe.mat', 'path','linehaulnum');
                     ppos = path(j);
                     npos = path(j+1);
                     temp = dist_spot(ppos,cpos)+dist_spot(cpos,npos)-dist_spot(ppos,npos);

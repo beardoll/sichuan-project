@@ -89,20 +89,44 @@ function [cluster] = autocluster(demand, samplex, sampley, capacity, K, repox, r
     % 对于当前负担最大的簇，检查其两边簇的负担，把其成员分配给负担较小的簇
     % 对于簇负担最大的簇，挖出其离边线最近的点，转移到旁边的簇
     maxburden = max(burden);
+    iter = 1;
+    maxiter = 10000;
     while maxburden > capacity
         clusterindex = find(burden == maxburden);
         clusterindex = clusterindex(1);
         % leftcluster和rightcluster是该簇左右两边的簇编号
-        if clusterindex == 1
-            leftcluster = K;
-            rightcluster = 2;
-        elseif clusterindex == K
-            leftcluster = K-1;
-            rightcluster = 1;
+        if iter > maxiter
+            searchrange = randi([1 K]);
+            if clusterindex - searchrange <= 0
+                leftcluster = clusterindex - searchrange + K;
+                if clusterindex + searchrange > K
+                    rightcluster = clusterindex + searchrange - K;
+                else
+                    rightcluster = clusterindex + searchrange;
+                end
+            else
+                leftcluster = clusterindex - searchrange;
+                if clusterindex + searchrange > K
+                    rightcluster = clusterindex + searchrange - K;
+                else
+                    rightcluster = clusterindex + searchrange;
+                end
+            end
+            iter = 1;
         else
-            leftcluster = clusterindex - 1;
-            rightcluster = clusterindex + 1;
+            if clusterindex == 1
+                leftcluster = K;
+                rightcluster = 2;
+            elseif clusterindex == K
+                leftcluster = K-1;
+                rightcluster = 1;
+            else
+                leftcluster = clusterindex - 1;
+                rightcluster = clusterindex + 1;
+            end
         end
+        
+        
         if clusterindex == K  % 如果这是最后一个簇，那么前边界应该是bound(end)，后边界是bound(1)
             frontangle = angle(end);
             backangle = angle(1);
@@ -155,6 +179,7 @@ function [cluster] = autocluster(demand, samplex, sampley, capacity, K, repox, r
             realindex = realmaxindex;
             neighborindex = rightcluster;
         end
+        iter = iter + 1;
         clustermem = setdiff(clustermem, realindex);
         burden(clusterindex) = burden(clusterindex) - demand(realindex);
         cluster{clusterindex} = clustermem;

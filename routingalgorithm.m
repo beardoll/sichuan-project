@@ -1,7 +1,7 @@
 % clc;clear;
 % 绝对定位： 比如，1 -- n表示linehaul, n+1 -- m表示backhaul
 % load dataset;
-function [totalcost] = routingalgorithm(dataset, option)
+function [totalcost, final_path] = routingalgorithm(dataset, option)
     % dataset: Lx, Ly, demandL, Bx, By, demandB, capacity, repox, repoy,
     %          regionrange, colDiv, rowDiv, K
     %          Lx, Ly: linehaul节点的横、纵坐标，Bx,By为backhaul
@@ -122,8 +122,8 @@ function [totalcost] = routingalgorithm(dataset, option)
                     if i + searchrange > K
                         rightcluster = i + searchrange - K;
                         leftcluster = i - searchrange;
-                    elseif i - searchrange < 0
-                        leftcluster = i - searchrange + K + 1;
+                    elseif i - searchrange <= 0
+                        leftcluster = i - searchrange + K;
                         rightcluster = K-1;
                     else
                         leftcluster = i - searchrange;
@@ -135,22 +135,22 @@ function [totalcost] = routingalgorithm(dataset, option)
                             length(clusterL{rightcluster}) == 0
                             searchrange = searchrange + 1;
                         else
-                            clustermem = clusterL(rightcluster);
+                            clustermem = clusterL{rightcluster};
                             index = randi([1 length(clustermem)]);
                             memchoice = clustermem(index);
                             clustermem(index) = [];
-                            clusterL(rightcluster) = clustermem;
+                            clusterL{rightcluster} = clustermem;
                             clusterL{i} = memchoice;
-                            stop == 1;
+                            stop = 1;
                         end
                     else
-                        clustermem = clusterL(leftcluster);
+                        clustermem = clusterL{leftcluster};
                         index = randi([1 length(clustermem)]);
                         memchoice = clustermem(index);
                         clustermem(index) = [];
-                        clusterL{i} = clustermem;
+                        clusterL{leftcluster} = clustermem;
                         clusterL{i} = memchoice;   
-                        stop == 1;
+                        stop = 1;
                     end
                 end
             end
@@ -207,19 +207,20 @@ function [totalcost] = routingalgorithm(dataset, option)
     for k = 1:K
         mem = big_cluster{k};  % 簇内成员
         memlen = length(mem);  % 簇内成员数目
-        linemem = mem(find(mem<=linehaulnum)); % linehaul节点，绝对定位
-        cdist_spot = dist_spot(mem, mem);
-        cdist_repo = dist_repo(mem);
-        % [best_path] = branchbound(N, n, dist_spot, dist_repo)
-        % n是linehaul的个数
-        % N是节点总的个数
-        % dist_spot是节点之间的相互距离（不包括仓库）
-        % dist_repo是各节点到仓库的距离
-        fprintf('The path for %d cluster\n',k);
-%         [best_path, best_cost] = branchboundtight(memlen, length(linemem), dist_spot, dist_repo);
         if memlen == 0   % 空路径
             path{k} = [0 0];
         else
+            save('haha.mat', 'mem','linehaulnum', 'big_cluster','k');
+            linemem = mem(find(mem<=linehaulnum)); % linehaul节点，绝对定位
+            cdist_spot = dist_spot(mem, mem);
+            cdist_repo = dist_repo(mem);
+            % [best_path] = branchbound(N, n, dist_spot, dist_repo)
+            % n是linehaul的个数
+            % N是节点总的个数
+            % dist_spot是节点之间的相互距离（不包括仓库）
+            % dist_repo是各节点到仓库的距离
+            fprintf('The path for %d cluster\n',k);
+%         [best_path, best_cost] = branchboundtight(memlen, length(linemem), dist_spot, dist_repo);
             [best_path, best_cost] = TSPB_intprog(memlen, length(linemem), cdist_spot, cdist_repo);
             totalcost = totalcost + best_cost;
             relative_pos = best_path(2:end-1);  % 第一个和最后一个节点是仓库
@@ -278,7 +279,7 @@ function [totalcost] = routingalgorithm(dataset, option)
                     path{i+1} = newpath3;
                 end
                 totalcost = totalcost + reducecost;
-                reducecost
+                reducecost;
             end
         end
     
@@ -327,12 +328,12 @@ function [totalcost] = routingalgorithm(dataset, option)
                 path{i+1} = newpath3;
             end
             totalcost = totalcost + reducecost;
-            reducecost
+            reducecost;
         end
     end
     end
 
-
+    final_path = path;
     %% 把路径结果给画出来
 %     load big_cluster;
 %     load('best_path.mat');
