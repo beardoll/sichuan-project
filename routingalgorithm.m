@@ -33,26 +33,40 @@ function [totalcost, final_path] = routingalgorithm(dataset, option)
     linehaulnum = length(Lx);
     backhaulnum = length(Bx);
     K = dataset.K;
+    totalnum = linehaulnum + backhaulnum;
     
     if option.cluster == 1  % 第一种分簇方法
        %% 首先确定应该用几辆车去运送Linehaul和Backhaul
         % 经测试，对于backhaul，最佳方案还是硬分簇而不是随意分
-        KL = K;
-        KB = BPP(demandB, capacity);
+%         KB = BPP(demandB, capacity);
 
        %% 对Linehaul和Backhaul进行分簇
         % 初始化簇首
-        [CHL] = detectOriginalValue(regionrange, rowDiv, colDiv, Lx, Ly, KL, repox, repoy);
-        [CHB] = detectOriginalValue(regionrange, rowDiv, colDiv, Bx, By, KB, repox, repoy);
+%         [CHL] = detectOriginalValue(regionrange, rowDiv, colDiv, Lx, Ly, KL, repox, repoy);
+%         [CHB] = detectOriginalValue(regionrange, rowDiv, colDiv, Bx, By, KB, repox, repoy);
+        CH = detectOriginalValue(regionrange, rowDiv, colDiv, [Lx Ly], [Bx By], K, repox, repoy);
 
         % 分别分簇
-        [uL, centerL] = cluster(CHL, demandL, Lx, Ly, KL, capacity, 1);
-        uL = int8(uL);
-        clusterL = cell(KL);   % 每个簇的成员,1-linehaulnum   
-        for i = 1:KL
-            mem = find(uL((i-1)*linehaulnum+1:i*linehaulnum)==1);
-            clusterL{i} = mem;
-        end
+        clusterL = cell(K);
+        clusterB = cell(K);
+        [u, center] = cluster(CH, linehaulnum, [demandL demandB]', [Lx Bx]', [Ly By]', K, capacity, repox, repoy);
+         for i = 1:K
+            memL = find(u((i-1)*totalnum+1:(i-1)*totalnum + linehaulnum)==1);
+            clusterL{i} = memL;
+            memB = find(u((i-1)*totalnum+linehaulnum+1:i*totalnum)==1);
+            clusterB{i} = memB + linehaulnum;            
+         end
+         big_cluster = cell(K);
+         for i = 1:K
+             big_cluster{i} = [clusterL{i};clusterB{i}];
+         end
+%         [uL, centerL] = cluster(CHL, demandL', Lx', Ly', KL, capacity, repox, repoy, 1);
+%         uL = int8(uL);
+%         clusterL = cell(KL);   % 每个簇的成员,1-linehaulnum   
+%         for i = 1:KL
+%             mem = find(uL((i-1)*linehaulnum+1:i*linehaulnum)==1);
+%             clusterL{i} = mem;
+%         end
 
         %%%%%%%%%%%%%%%%%%%%%%%% cluster函数相关定义 %%%%%%%%%%%%%%%%%%%%%%%%%%
         % cluster(center_ini, demand, samplex, sampley, cluster_num, capacity, option)
@@ -63,13 +77,13 @@ function [totalcost, final_path] = routingalgorithm(dataset, option)
         % 返回隶属矩阵u
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        [uB, centerB] = cluster(CHB, demandB, Bx, By, KB, capacity, 1);
-        uB = int8(uB);
-        clusterB = cell(KB);   % 每个簇的成员, linehaulnum+1 - linehaulnum + backhaulnum
-        for i = 1:KB
-            mem = find(uB((i-1)*backhaulnum+1:i*backhaulnum)==1);
-            clusterB{i} = mem+linehaulnum;
-        end
+%         [uB, centerB] = cluster(CHB, demandB', Bx', By', KB, capacity, repox, repoy, 1);
+%         uB = int8(uB);
+%         clusterB = cell(KB);   % 每个簇的成员, linehaulnum+1 - linehaulnum + backhaulnum
+%         for i = 1:KB
+%             mem = find(uB((i-1)*backhaulnum+1:i*backhaulnum)==1);
+%             clusterB{i} = mem+linehaulnum;
+%         end
     %     save('origincluster.mat', 'clusterL', 'clusterB');
 
         %%%%%%%%%%%%%%%%%%% 画出初始分簇情况 %%%%%%%%%%%%%%%%%
@@ -81,31 +95,32 @@ function [totalcost, final_path] = routingalgorithm(dataset, option)
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        %% 针对Linehaul和Backhaul进行配对，形成簇
-        % 首先计算Linehaul和Backhaul簇心/仓库之间的距离
-        % load origincluster;
-        center_dist = zeros(KL, KL);
-        for i = 1:KL
-            for j = 1:KL
-                if j <= KB    % linehaul连接backhaul
-                    center_dist(i,j) = sqrt((centerL(i,1)-centerB(j,1))^2+(centerL(i,2)-centerB(j,2))^2);
-                else          % linehaul直接连接仓库
-                    center_dist(i,j) = sqrt((centerL(i,1) - repox)^2 + (centerL(i,2) - repoy)^2);
-                end
-            end
-        end
-
-        % 然后进行配对
-        [assignment] = AP(center_dist);
-        big_cluster = cell(linehaulnum);
-        for i = 1:KL
-            match = find(assignment(i,:)==1);  % 找出linehaul的簇跟谁配对
-            if match <= KB  % 和backhaul配对
-                big_cluster{i} = [clusterL{i};clusterB{match}];
-            else            % 和repository配对
-                big_cluster{i} = clusterL{i};
-            end
-        end
+%         %% 针对Linehaul和Backhaul进行配对，形成簇
+%         % 首先计算Linehaul和Backhaul簇心/仓库之间的距离
+%         % load origincluster;
+%         center_dist = zeros(KL, KL);
+%         for i = 1:KL
+%             for j = 1:KL
+%                 if j <= KB    % linehaul连接backhaul
+%                     center_dist(i,j) = sqrt((centerL(i,1)-centerB(j,1))^2+(centerL(i,2)-centerB(j,2))^2) ...
+%                         + sqrt((centerB(j,1) - repox)^2 + (centerB(j,2) - repoy)^2);
+%                 else          % linehaul直接连接仓库
+%                     center_dist(i,j) = sqrt((centerL(i,1) - repox)^2 + (centerL(i,2) - repoy)^2);
+%                 end
+%             end
+%         end
+% 
+%         % 然后进行配对
+%         [assignment] = AP(center_dist);
+%         big_cluster = cell(linehaulnum);
+%         for i = 1:KL
+%             match = find(assignment(i,:)==1);  % 找出linehaul的簇跟谁配对
+%             if match <= KB  % 和backhaul配对
+%                 big_cluster{i} = [clusterL{i};clusterB{match}];
+%             else            % 和repository配对
+%                 big_cluster{i} = clusterL{i};
+%             end
+%         end
        
         
     elseif option.cluster == 2  % 采用第二种分簇方法
@@ -279,7 +294,7 @@ function [totalcost, final_path] = routingalgorithm(dataset, option)
                     path{i+1} = newpath3;
                 end
                 totalcost = totalcost + reducecost;
-                reducecost;
+                reducecost
             end
         end
     
@@ -328,7 +343,7 @@ function [totalcost, final_path] = routingalgorithm(dataset, option)
                 path{i+1} = newpath3;
             end
             totalcost = totalcost + reducecost;
-            reducecost;
+            reducecost
         end
     end
     end

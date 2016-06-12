@@ -1,4 +1,4 @@
-function [u_final, center] = cluster(center_ini, demand, samplex, sampley, cluster_num, capacity, option)
+function [u_final, center] = cluster(center_ini, n, demand, samplex, sampley, cluster_num, capacity, repox, repoy)
     % center_ini: 簇首的初始位置
     % demand:各个数据点的货物需求
     % samplex, sampley: 数据点的x，y坐标
@@ -19,22 +19,19 @@ function [u_final, center] = cluster(center_ini, demand, samplex, sampley, clust
                 clusterindex = clusterindex - 1;
             end
             num = i - (clusterindex-1)*datanum;   % 数据点的位置
-            dist(i) = (samplex(num)-center(clusterindex,1))^2+(sampley(num)-center(clusterindex,2))^2;
+            dist(i) = (samplex(num)-center(clusterindex,1))^2+(sampley(num)-center(clusterindex,2))^2 + ...
+                (samplex(num) - repox)^2 + (sampley(num) - repoy)^2 + (center(clusterindex,1) - repox)^2 + ...
+                (center(clusterindex,2) - repoy)^2;
         end   
         K;
-        switch option
-            case 1
-                u_new = FCM_integer(datanum, dist,K, capacity, demand);
-            case 2
-                u_new = FCM_noconstraint(datanum, K, dist);
-            case 3             
-                u_new = FCM_inner(dist,C,capacity,demand);
-        end
+        u_new = FCM_integer(n, datanum, dist,K, capacity, demand);
+%         u_new = FCM_noconstraint(datanum, K, dist);           
+%         u_new = FCM_inner(dist,C,capacity,demand);
         u = u_new;
         newcenter = zeros(K,2);
         for i = 1:K
-            newcenter(i,1) = sum(u((i-1)*datanum+1:i*datanum).*samplex)/sum(u((i-1)*datanum+1:i*datanum));   % 更新簇首
-            newcenter(i,2) = sum(u((i-1)*datanum+1:i*datanum).*sampley)/sum(u((i-1)*datanum+1:i*datanum));
+            newcenter(i,1) = sum(u((i-1)*datanum+1:i*datanum).*(samplex+repox)/2)/sum(u((i-1)*datanum+1:i*datanum));   % 更新簇首
+            newcenter(i,2) = sum(u((i-1)*datanum+1:i*datanum).*(sampley+repoy)/2)/sum(u((i-1)*datanum+1:i*datanum));
         end
         gap = sum(sum((center-newcenter).^2));
         center = newcenter;

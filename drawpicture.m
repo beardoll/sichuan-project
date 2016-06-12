@@ -10,11 +10,11 @@ function [] = drawpicture(path, Lx, Ly, Bx, By, repox, repoy, picturerange)
             if length(part_path) == 0
                 continue;
             else
-                plot([repox Lx(part_path(1))], [repoy Ly(part_path(1))], 'r-');
+                plot([repox Lx(part_path(1))], [repoy Ly(part_path(1))], 'r-', 'LineWidth', 2);
                 axis(picturerange);
                 hold on;
-                plot(repox, repoy, 'b*');
-                plot(Lx(part_path(1)), Ly(part_path(1)), 'go');
+                plot(repox, repoy, 'b*','MarkerSize',8);
+                plot(Lx(part_path(1)), Ly(part_path(1)), 'go','MarkerSize',8);
                 pathlen = length(part_path);
                 for j = 2:pathlen+1
                     frontnum = part_path(j-1);
@@ -36,10 +36,10 @@ function [] = drawpicture(path, Lx, Ly, Bx, By, repox, repoy, picturerange)
                             y2 = By(backnum - linehaulnum);
                             color = 'bd';
                         end
-                        plot(x2, y2, color);
-                        plot([x1 x2], [y1 y2],'r-');
+                        plot(x2, y2, color, 'MarkerSize',8);
+                        plot([x1 x2], [y1 y2],'r-', 'LineWidth', 2);
                     else
-                        plot([x1 repox], [y1 repoy], 'r-');
+                        plot([x1 repox], [y1 repoy], 'r-', 'LineWidth', 2);
                     end
                 end
     %         legend('Á¬½Ó±ß','²Ö¿â','linehaul', 'backhaul');

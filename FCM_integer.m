@@ -1,4 +1,4 @@
-function [u_new] =FCM_integer(datanum, dist,K,capacity,demand)
+function [u_new] =FCM_integer(n, datanum, dist,K,capacity,demand)
     % 整数规划，实际非FCM，是一种硬分类
     ux = intvar(datanum*K,1);
     f = dist'*ux;
@@ -8,7 +8,8 @@ function [u_new] =FCM_integer(datanum, dist,K,capacity,demand)
     b = ones(datanum,1);
     F = F+[A*ux==b];
     for j = 1:K
-        F=F+[ux((j-1)*datanum+1:j*datanum)'*demand <= capacity];
+        F=F+[ux((j-1)*datanum+1:(j-1)*datanum+n)'*demand(1:n) <= capacity];
+        F=F+[ux((j-1)*datanum+n+1:j*datanum)'*demand(n+1:end) <= capacity];
     end
     solvesdp(F,f);
     u_new = double(ux);
