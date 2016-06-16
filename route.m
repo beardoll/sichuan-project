@@ -1,4 +1,7 @@
 function [cost] = route(N, n, dist_spot, dist_repo)
+    % 求解VRPB问题的快速算法
+    % 只能求得次优解
+    % N是总结点数，n是linehaul节点数
     U = 1:n;   % 未添加到路径中的节点
     delta = dist_repo;  % 考虑完全图，且对称
     route = [0];
