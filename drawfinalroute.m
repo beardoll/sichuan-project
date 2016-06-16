@@ -1,16 +1,24 @@
-function [] = drawpicture(path, Lx, Ly, Bx, By, repox, repoy, picturerange)
+function [] = drawfinalroute(path, Lx, Ly, Bx, By, repox, repoy, picturerange)
+    % 画出所有的路径
+    % 以圆圈表示linehaul，菱形表示backhaul
+    coloroption = char('r-','b-','g-','m-','k-');
     pathnum = length(path);   % 路径数量
     linehaulnum = length(Lx);
     if pathnum == 0
         return;
     else
         for i = 1:pathnum
-            figure(i+20);
+            temp = mod(i,5);
+            if temp == 0
+                temp = 5;
+            end
+            linecolor = coloroption(temp);
+%             figure(i+20);
             part_path = path{i};
             if length(part_path) == 0
                 continue;
             else
-                plot([repox Lx(part_path(1))], [repoy Ly(part_path(1))], 'r-', 'LineWidth', 2);
+                plot([repox Lx(part_path(1))], [repoy Ly(part_path(1))], linecolor, 'LineWidth', 2);
                 axis(picturerange);
                 hold on;
                 plot(repox, repoy, 'b*','MarkerSize',8);
@@ -37,14 +45,14 @@ function [] = drawpicture(path, Lx, Ly, Bx, By, repox, repoy, picturerange)
                             color = 'bd';
                         end
                         plot(x2, y2, color, 'MarkerSize',8);
-                        plot([x1 x2], [y1 y2],'r-', 'LineWidth', 2);
+                        plot([x1 x2], [y1 y2],linecolor, 'LineWidth', 2);
                     else
-                        plot([x1 repox], [y1 repoy], 'r-', 'LineWidth', 2);
+                        plot([x1 repox], [y1 repoy], linecolor, 'LineWidth', 2);
                     end
                 end
-    %         legend('连接边','仓库','linehaul', 'backhaul');
-                hold off;
+                hold on;
             end
         end
     end        
+    hold off;
 end

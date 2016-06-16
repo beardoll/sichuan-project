@@ -10,6 +10,7 @@ function [u_new] =FCM_integer(n, datanum, dist,K,capacity,demand)
     for j = 1:K
         F=F+[ux((j-1)*datanum+1:(j-1)*datanum+n)'*demand(1:n) <= capacity];
         F=F+[ux((j-1)*datanum+n+1:j*datanum)'*demand(n+1:end) <= capacity];
+        F=F+[sum(ux((j-1)*datanum+1:(j-1)*datanum+n)) >= 1];
     end
     solvesdp(F,f);
     u_new = double(ux);

@@ -1,13 +1,19 @@
 % Goetschlcks and Jacobs-blecha的数据集
 clc;clear;
+close all;
 xrange = [0 24000];   % 横坐标范围
 yrange = [0 32000];   % 纵坐标范围
 repox = 12000;        % 仓库x坐标
 repoy = 16000;        % 仓库y坐标
 
-K;
-load KPro;
-PROID = 2;
+N;
+load NPro;
+PROID = 6;
+
+% plot([Lx, Bx], [Ly,By],'o');
+% axis([0 24000 0 32000]);
+% grid on;
+% set(gca,'xtick', 0:3000:24000, 'ytick',0:4000:32000); 
 
 % 函数赋值
 dataset.Lx = Lx;
@@ -18,28 +24,25 @@ dataset.demandL = demandL;
 dataset.demandB = demandB;
 dataset.capacity = capacity(PROID);
 dataset.regionrange = [xrange, yrange];
-dataset.colDiv = 4;
-dataset.rowDiv = 4;
 dataset.repox = repox;
 dataset.repoy = repoy;
 dataset.K = carnum(PROID);
 
-option.cluster = 1;
+option.cluster = 2;
 option.drawbigcluster = 0;
-option.draworigincluster = 1;
+option.draworigincluster = 0;
 option.drawfinalrouting = 1;
-option.localsearch = 0;
+option.localsearch = 1;
 
-[totalcost, final_path] = routingalgorithm(dataset, option)
+[totalcost, final_path] = VRPB(dataset, option)
                 
 % dataset: Lx, Ly, demandL, Bx, By, demandB, capacity, repox, repoy,
-%          regionrange, colDiv, rowDiv, K
+%          regionrange, K
 %          Lx, Ly: linehaul节点的横、纵坐标，Bx,By为backhaul
 %          demandL: linehaul节点的货物绣球，demandB为backhaul
 %          capacity: 车容量
 %          repox, repoy: 仓库的横、纵坐标
 %          regionrange: 观测的区域范围
-%          colDiv,rowDiv: 区域划分，分别代表纵向分块数和横向分块数
 %          K: 货车数量
 % option: cluster: =1,使用分簇算法1.0，=2,使用分簇算法2.0
 %         draworigincluster: =1, 画初始簇分布

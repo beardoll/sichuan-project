@@ -1,0 +1,190 @@
+{\rtf1\ansi\ansicpg936\deff0\nouicompat\deflang1033\deflangfe2052{\fonttbl{\f0\fnil\fcharset134 \'cb\'ce\'cc\'e5;}{\f1\fnil Courier New;}}
+{\colortbl ;\red255\green0\blue0;\red0\green176\blue80;\red0\green0\blue0;\red155\green0\blue211;}
+{\*\generator Riched20 6.3.9600}\viewkind4\uc1 
+\pard\b\f0\fs28\lang2052\'d2\'bb\'a1\'a2\'ca\'fd\'be\'dd\'bc\'af\b0\fs22\lang0\par
+1\lang2052\'a1\'a2benchmark\'b2\'fa\'c9\'fa\'ba\'af\'ca\'fd(Goetschalckx\'ca\'fd\'be\'dd\'bc\'af)\'a3\'ba\par
+   \'d2\'d4A-O\'c3\'fc\'c3\'fb\'a3\'ac\'b5\'c3\'b5\'bd\'b5\'c4\'ca\'fd\'be\'dd\'b4\'e6\'b7\'c5\'d4\'da\'cf\'e0\'d3\'a6\'b5\'c4\'be\'d8\'d5\'f3\'d6\'d0\'a3\'ac\'b1\'c8\'c8\'e7A\'b3\'cc\'d0\'f2\'b5\'c3\'b5\'bdA\'ce\'ca\'cc\'e2\'b5\'c4\'ca\'fd\'be\'dd\'bc\'af\'a3\'ac\'c4\'c7\'c3\'b4\'be\'cd\'b4\'e6\'b7\'c5\'d4\'daAPro\'d6\'d0\'a1\'a3XPro\'d3\'d0\'c8\'e7\'cf\'c2\'c4\'da\'c8\'dd\'a3\'ba\par
+   a) \cf1\b Lx,Ly,Bx,By:\cf0\b0 linehaul\'ba\'cdbackhaul\'bd\'da\'b5\'e3\'b5\'c4\'ba\'e1\'d7\'dd\'d7\'f8\'b1\'ea\par
+   b) \cf1\b demandL,demandB:\cf0\b0 linehaul\'ba\'cdbackhaul\'bd\'da\'b5\'e3\'b5\'c4\'bb\'f5\'ce\'ef\'d0\'e8\'c7\'f3\'c1\'bf\par
+   c) \cf1\b capacity: \cf0\b0\'bb\'f5\'b3\'b5\'c8\'dd\'c1\'bf\'a3\'ac\'b8\'f9\'be\'dd\'d7\'d3\'ce\'ca\'cc\'e2\'b1\'ea\'ba\'c5\'c5\'c5\'d0\'f2\par
+   d) \cf1\b carnum: \cf0\b0\'bb\'f5\'b3\'b5\'ca\'fd\'c1\'bf\'a3\'ac\'cd\'ac\'d1\'f9\'b8\'f9\'be\'dd\'d7\'d3\'ce\'ca\'cc\'e2\'b1\'ea\'ba\'c5\'c5\'c5\'d0\'f2\par
+\par
+\b\fs28\'b6\'fe\'a1\'a2\'b4\'f3\'cb\'e3\'b7\'a8\b0\fs22\par
+2\'a1\'a2\'d6\'f7\'b5\'f7\'d3\'c3\'ba\'af\'ca\'fd\'a3\'ba\b GJdataset\par
+\b0    \'b5\'f7\'d3\'c3\'b2\'bb\'cd\'ac\'b5\'c4VRPB\'cb\'e3\'b7\'a8\'a3\'ac\'d6\'f7\'d2\'aa\'ca\'c7\'b8\'f8VRPB\'ca\'b5\'cf\'d6\'ba\'af\'ca\'fdroutingalgorithm\'ca\'e4\'c8\'eb\'b2\'ce\'ca\'fd\'a1\'a3\par
+\par
+3\'a1\'a2\'ca\'b5\'cf\'d6\'ba\'af\'ca\'fd\b VRPB\par
+
+\pard\b0    \'ba\'af\'ca\'fd\'d0\'ce\'ca\'bd\'a3\'ba\cf2\f1\fs20 [totalcost, final_path] = \f0 VRPB\f1 (dataset, option)\cf3\par
+\f0    \fs22\'d7\'f7\'d3\'c3\'a3\'ba\'c7\'f3\'bd\'e2TSPB\'ce\'ca\'cc\'e2\cf0\f1\par
+
+\pard\f0\lang0    \lang2052\'b2\'ce\'ca\'fd\'b6\'a8\'d2\'e5\'a3\'ba\par
+\lang0    \cf4\lang2052 dataset:\cf0\par
+       \cf1\b Lx,Ly,Bx,By:\cf0\b0 linehaul\'ba\'cdbackhaul\'bd\'da\'b5\'e3\'b5\'c4\'ba\'e1\'d7\'dd\'d7\'f8\'b1\'ea\par
+
+\pard        \cf1\b demandL,demandB:\cf0\b0 linehaul\'ba\'cdbackhaul\'bd\'da\'b5\'e3\'b5\'c4\'bb\'f5\'ce\'ef\'d0\'e8\'c7\'f3\'c1\'bf\par
+
+\pard        \cf1\b capacity:\cf0\b0\'bb\'f5\'ce\'ef\'c8\'dd\'c1\'bf\par
+       \cf1\b repox, repoy: \cf0\b0\'b2\'d6\'bf\'e2\'ba\'e1\'d7\'dd\'d7\'f8\'b1\'ea\par
+       \cf1\b K \'a3\'ba \cf0\b0\'b3\'b5\'c1\'be\'ca\'fd\par
+       \cf1\b regionrange:\cf0\b0\'c7\'f8\'d3\'f2\'b7\'b6\'ce\'a7\'a3\'ac[xmin xmax ymin ymax]\par
+   \cf4 option:\cf0\par
+       \cf1\b cluster: \cf0\b0 =1\'a3\'ac\'ca\'b9\'d3\'c3\'bb\'f9\'d3\'da\'c5\'b7\'ca\'cf\'be\'e0\'c0\'eb\'b5\'c4\'b7\'d6\'b4\'d8\'cb\'e3\'b7\'a8\'a3\'bb=2\'ca\'b9\'d3\'c3\'bb\'f9\'d3\'da\'b7\'f9\'bd\'c7\'be\'e0\'c0\'eb\'b5\'c4\'b7\'d6\'b4\'d8\'cb\'e3\'b7\'a8\par
+       \cf1\b draworigincluster: \cf0\b0 =1\'b1\'ed\'ca\'be\'bb\'ad\'b3\'f6\'ce\'b4\'ba\'cf\'b2\'a2\'c7\'b0linehaul\'ba\'cdbackhaul\'b4\'d8\par
+       \cf1\b drawbigcluster: \cf0\b0 =1\'b1\'ed\'ca\'be\'bb\'ad\'b3\'f6\'ba\'cf\'b2\'a2\'ba\'f3\'b5\'c4\'b4\'d8\'b7\'d6\'b2\'bc\par
+       \cf1\b drawfinalrouting: \cf0\b0 =1\'b1\'ed\'ca\'be\'bb\'ad\'b3\'f6\'d7\'ee\'d6\'d5\'b5\'c4\'c2\'b7\'be\'b6\par
+       \cf1\b localsearch: \cf0\b0 =1\'b1\'ed\'ca\'be\'ca\'b9\'d3\'c3\'be\'d6\'b2\'bf\'cb\'d1\'cb\'f7\'cb\'e3\'b7\'a8\par
+    \cf1\b totalcost:\cf0\b0\'c2\'b7\'be\'b6\'d7\'dc\'b4\'fa\'bc\'db\par
+    \cf1\b final_path:\cf0\b0\'d7\'ee\'d6\'d5\'c2\'b7\'be\'b6\'a3\'ac\'c3\'bf\'cc\'f5\'c2\'b7\'be\'b6\'b5\'da\'d2\'bb\'b8\'f6\'ba\'cd\'d7\'ee\'ba\'f3\'d2\'bb\'b8\'f6\'bd\'da\'b5\'e3\'b6\'bc\'ca\'c7\'b2\'d6\'bf\'e2\par
+\par
+\b\fs28\'c8\'fd\'a1\'a2\'d7\'d3\'cb\'e3\'b7\'a8\b0\fs22\par
+\b\i (i) \'b7\'d6\'b4\'d8\'cb\'e3\'b7\'a8\b0\i0\par
+4. \'bb\'f9\'d3\'da\'c5\'b7\'ca\'bd\'be\'e0\'c0\'eb\'b5\'c4\'be\'db\'c0\'e0\'ba\'af\'ca\'fd\b Eulercluster\par
+
+\pard\b0    \'ba\'af\'ca\'fd\'d0\'ce\'ca\'bd\'a3\'ba\cf2\f1\fs20 [u_final, center] = \f0 Euler\f1 cluster(center_ini, n, demand, \par
+\f0                   \f1 samplex, sampley, cluster_num, capacity, repox, repoy)\par
+\cf3\f0    \fs22\'d7\'f7\'d3\'c3\'a3\'ba\'ca\'b9\'d3\'c3\'c5\'b7\'ca\'bd\'be\'e0\'c0\'eb\'b6\'d4\'cb\'f9\'d3\'d0\'b5\'c4\'b9\'cb\'bf\'cd\'bd\'da\'b5\'e3\'bd\'f8\'d0\'d0\'b7\'d6\'b4\'d8\par
+   \'b1\'e4\'c1\'bf\'b6\'a8\'d2\'e5\'a3\'ba\par
+        \cf1\b center_ini:\cf3\b0\'b4\'d8\'ca\'d7\'b3\'f5\'ca\'bc\'d6\'b5\par
+               \cf1\b n  :\cf3\b0 linehaul\'bd\'da\'b5\'e3\'ca\'fd\'c1\'bf\par
+            \cf1\b demand:\cf3\b0\'cb\'f9\'d3\'d0\'bd\'da\'b5\'e3\'b5\'c4\'bb\'f5\'ce\'ef\'d0\'e8\'c7\'f3\'c1\'bf\par
+        \cf1\b samplex,sampley:\cf3\b0\'cb\'f9\'d3\'d0\'bd\'da\'b5\'e3\'b5\'c4\'ba\'e1\'d7\'dd\'d7\'f8\'b1\'ea\par
+        \cf1\b clusternum:\cf3\b0\'b7\'d6\'b4\'d8\'b5\'c4\'ca\'fd\'c1\'bf\par
+          \cf1\b capacity:\cf3\b0\'b3\'b5\'d4\'d8\'c1\'bf\par
+        \cf1\b repox\'a3\'acrepoy:\cf3\b0\'b2\'d6\'bf\'e2\'b5\'c4\'ba\'e1\'a1\'a2\'d7\'dd\'d7\'f8\'b1\'ea\par
+            \cf1\b u_final\'a3\'ba\cf3\b0\'b7\'d6\'b4\'d8\'cd\'ea\'b3\'c9\'ba\'f3\'b5\'c4\'c1\'a5\'ca\'f4\'be\'d8\'d5\'f3\par
+             \cf1\b center:\cf3\b0\'d7\'ee\'d6\'d5\'b4\'d8\'ca\'d7\'b5\'c4\'ce\'bb\'d6\'c3\par
+  \'c6\'e4\'d6\'f7\'d2\'aa\'cd\'a8\'b9\'fd\'b5\'f7\'d3\'c3\'d5\'fb\'ca\'fd\'b9\'e6\'bb\'ae FCM_integer\'c0\'b4\'ca\'b5\'cf\'d6\'a1\'a3\par
+\par
+5. \'b4\'d8\'ca\'d7\'b3\'f5\'ca\'bc\'bb\'af\'cb\'e3\'b7\'a8 \b Candidate\par
+\b0     \'ba\'af\'ca\'fd\'d0\'ce\'ca\'bd\'a3\'ba\cf2\f1\fs20 [CH]= Candidate(Lx, Ly, Bx, By, xmax, ymax, K)\cf0\fs22\par
+\cf3\f0     \'d7\'f7\'d3\'c3\'a3\'ba\'b8\'f9\'be\'dd\'b9\'cb\'bf\'cd\'bd\'da\'b5\'e3\'b3\'f5\'ca\'bc\'b7\'d6\'b2\'bc\'b6\'a8\'d2\'e5\'b3\'f5\'ca\'bc\'b4\'d8\'ca\'d7\'a3\'a8\'cd\'f8\'b8\'f1\'b7\'a8\'a3\'a9\par
+    \'b1\'e4\'c1\'bf\'b6\'a8\'d2\'e5\'a3\'ba\par
+       \cf1\b Lx,Ly,Bx,By:\cf0\b0 linehaul\'ba\'cdbackhaul\'bd\'da\'b5\'e3\'b5\'c4\'ba\'e1\'d7\'dd\'d7\'f8\'b1\'ea\par
+       \cf1\b xmax,ymax\'a3\'ba\cf0\b0\'b9\'db\'b2\'e2\'c7\'f8\'d3\'f2\'b5\'c4\'ba\'e1\'d7\'dd\'d7\'f8\'b1\'ea\'d7\'ee\'b4\'f3\'d6\'b5 \par
+           \cf1\b K \'a3\'ba \cf0\b0\'b7\'d6\'b4\'d8\'ca\'fd\'c4\'bf\par
+          \cf1\b CH : \cf3\b0\'be\'f6\'b6\'a8\'b3\'f6\'c0\'b4\'b5\'c4\'b4\'d8\'ca\'d7\'ce\'bb\'d6\'c3\par
+\par
+6. \'b8\'f9\'be\'dd\'b7\'f9\'bd\'c7\'b7\'d6\'b4\'d8\'cb\'e3\'b7\'a8 \b Anglecluster\par
+\b0     \'ba\'af\'ca\'fd\'d0\'ce\'ca\'bd\cf2\'a3\'ba[cluster] = Anglecluster(demand, samplex, sampley, capacity, K, \par
+               repox, repoy)  \cf3\par
+        \cf1\b center_ini:\cf3\b0\'b4\'d8\'ca\'d7\'b3\'f5\'ca\'bc\par
+        \cf1\b n :\cf3\b0 linehaul\'bd\'da\'b5\'e3\'ca\'fd\'c1\'bf\par
+        \cf1\b demand:\cf3\b0\'cb\'f9\'d3\'d0\'bd\'da\'b5\'e3\'b5\'c4\'bb\'f5\'ce\'ef\'d0\'e8\'c7\'f3\'c1\'bf\par
+        \cf1\b samplex,sampley:\cf3\b0\'cb\'f9\'d3\'d0\'bd\'da\'b5\'e3\'b5\'c4\'ba\'e1\'d7\'dd\'d7\'f8\'b1\'ea\par
+        \cf1\b K:\cf3\b0\'b7\'d6\'b4\'d8\'b5\'c4\'ca\'fd\'c1\'bf\par
+        \cf1\b capacity:\cf3\b0\'b3\'b5\'d4\'d8\'c1\'bf\par
+        \cf1\b repox\'a3\'acrepoy:\cf3\b0\'b2\'d6\'bf\'e2\'b5\'c4\'ba\'e1\'a1\'a2\'d7\'dd\'d7\'f8\'b1\'ea\par
+        \cf1\b cluster:\cf3\b0\'d7\'ee\'d6\'d5\'b7\'d6\'b4\'d8\'bd\'e1\'b9\'fb\par
+\b\i (ii) \'ce\'aa\'c3\'bf\'b8\'f6\'b4\'d8\'c7\'f3\'bd\'e2\'c2\'b7\'be\'b6\b0\i0\par
+7. TSPB\'cb\'e3\'b7\'a8\par
+   \'ba\'af\'ca\'fd\'d0\'ce\'ca\'bd\cf2\'a3\'ba\f1\fs20 [best_path, best_cost] = TSPB_intprog(N, n, dist_spot, \par
+\f0                                            \f1 dist_repo)\par
+\cf3\f0    \fs22\'ba\'af\'ca\'fd\'d7\'f7\'d3\'c3\'a3\'ba\'ce\'aa\'c3\'bf\'b8\'f6\'b4\'d8\'c7\'f3\'bd\'e2\'d7\'ee\'d3\'c5\'c2\'b7\'be\'b6\par
+   \'b1\'e4\'c1\'bf\'b6\'a8\'d2\'e5\'a3\'ba\par
+        \cf1\b N\'a3\'ba\cf3\b0\'d7\'dc\'bd\'da\'b5\'e3\'ca\'fd\par
+        \cf1\b n: \cf3\b0 linehaul\'bd\'da\'b5\'e3\'ca\'fd\par
+    \cf1\b dist_spot:\cf3\b0\'b9\'cb\'bf\'cd\'bd\'da\'b5\'e3\'d6\'ae\'bc\'e4\'b5\'c4\'be\'e0\'c0\'eb\'a3\'ac\'c7\'b0n\'d0\'d0n\'c1\'d0\'ca\'c7linehaul\'a3\'ac\'ba\'f3\'c3\'e6\'b5\'c4\'d0\'d0\'c1\'d0\'ca\'c7backhaul\par
+    \cf1\b dist_repo:\cf3\b0\'b9\'cb\'bf\'cd\'bd\'da\'b5\'e3\'d3\'eb\'b2\'d6\'bf\'e2\'d6\'ae\'bc\'e4\'b5\'c4\'be\'e0\'c0\'eb\'a3\'ac\'c7\'b0n\'b8\'f6\'ca\'fd\'ca\'c7linehaul\'a3\'ac\'c6\'e4\'cb\'fb\'ca\'c7backhaul\par
+    \cf1\b best_path:\cf3\b0\'c7\'f3\'b5\'c3\'b5\'c4\'c2\'b7\'be\'b6\'bd\'e1\'b9\'fb \par
+    \cf1\b best_cost:\cf3\b0\'c7\'f3\'b5\'c3\'b5\'c4\'c2\'b7\'be\'b6\'b4\'fa\'bc\'db\par
+\par
+\b\i (iii) local search\b0\i0\par
+8. \'d5\'eb\'b6\'d4\'b7\'f9\'bd\'c7\'b7\'d6\'b4\'d8\'b5\'c4\'be\'d6\'b2\'bf\'cb\'d1\'cb\'f7\'a3\'ba\par
+     \'ba\'af\'ca\'fd\'d0\'ce\'ca\'bd\'a3\'ba\f1\fs20 [newpath, totalreducecost] = \par
+\f0                   \f1 neiborlocalsearch(path, dist_spot, dist_repo, demandL, \par
+\f0                   \f1 demandB, capacity, K)\par
+\f0      \fs22\'ba\'af\'ca\'fd\'d7\'f7\'d3\'c3\'a3\'ba\'b6\'d4\'d3\'da\'c2\'b7\'be\'b6\'b0\'b4\'b7\'f9\'bd\'c7\'cb\'b3\'d0\'f2\'c5\'c5\'c1\'d0\'b5\'c4\'c7\'e9\'bf\'f6\'a3\'ac\'bf\'c9\'bd\'f8\'d0\'d0\'c1\'bd\'d6\'d6local search\'a3\'bainsertion\par
+              \'ba\'cdinterchange\par
+    \'b1\'e4\'c1\'bf\'b6\'a8\'d2\'e5\'a3\'ba\par
+\cf0       \cf1\b path\'a3\'ba\cf0\b0\'d4\'ad\'c2\'b7\'be\'b6\cf3\par
+      \cf1\b dist_spot:\cf3\b0\'b9\'cb\'bf\'cd\'bd\'da\'b5\'e3\'d6\'ae\'bc\'e4\'b5\'c4\'be\'e0\'c0\'eb\'a3\'ac\'c7\'b0n\'d0\'d0n\'c1\'d0\'ca\'c7linehaul\'a3\'ac\'ba\'f3\'c3\'e6\'b5\'c4\'d0\'d0\'c1\'d0\'ca\'c7backhaul\par
+      \cf1\b dist_repo:\cf3\b0\'b9\'cb\'bf\'cd\'bd\'da\'b5\'e3\'d3\'eb\'b2\'d6\'bf\'e2\'d6\'ae\'bc\'e4\'b5\'c4\'be\'e0\'c0\'eb\'a3\'ac\'c7\'b0n\'b8\'f6\'ca\'fd\'ca\'c7linehaul\'a3\'ac\'c6\'e4\'cb\'fb\'ca\'c7backhaul\par
+      \cf1\b demandL,demandB:\cf0\b0 linehaul\'ba\'cdbackhaul\'bd\'da\'b5\'e3\'b5\'c4\'bb\'f5\'ce\'ef\'d0\'e8\'c7\'f3\'c1\'bf\par
+      \cf1\b capacity:\cf0\b0\'b3\'b5\'b5\'c4\'c8\'dd\'c4\'c9\'c1\'bf\par
+          K : \'b3\'b5\'c1\'be\'ca\'fd\par
+      \cf1\b totalreducecost\'a3\'ba\cf0\b0\'d2\'f2localsearch\'b2\'fa\'c9\'fa\'b5\'c4\'d7\'dc\'bd\'da\'ca\'a1\'c1\'bf\par
+      \cf1\b newpath: \cf0\b0\'d0\'c2\'c2\'b7\'be\'b6\fs28\par
+\cf3\fs24      \'c6\'e4\'b0\'fc\'ba\'ac\'c1\'cb\fs28  \b\fs22 insertion\'a3\'acinterchange\'c1\'bd\'b8\'f6\'ba\'af\'ca\'fd\par
+\b0      (a)\par
+      \'ba\'af\'ca\'fd\'d0\'ce\'ca\'bd\'a3\'ba\cf2\f1\fs20 [newpath1, newpath2, newpath3, reducecost] = \par
+\f0                    \f1 insertion(path1, path2, path3, dist_spot, dist_repo, \par
+\f0                    \f1 demandL, demandB, capacity)\fs22\par
+\cf0\f0       \'ba\'af\'ca\'fd\'d7\'f7\'d3\'c3\'a3\'ba\'bd\'abpath2\'b5\'c4\'bd\'da\'b5\'e3\'b2\'e5\'c8\'eb\'b5\'bdpath1\'bb\'f2\'d5\'dfpath3\'d6\'d0\par
+      \'b1\'e4\'c1\'bf\'b6\'a8\'d2\'e5\'a3\'ba \par
+        \cf1\b path1,path2,path3\'a3\'ba\cf0\b0\'b7\'f9\'bd\'c7\'c9\'cf\'cf\'e0\'c1\'da\'b5\'c4\'c8\'fd\'cc\'f5\'c2\'b7\'be\'b6 \cf3\par
+        \cf1\b dist_spot:\cf3\b0\'b9\'cb\'bf\'cd\'bd\'da\'b5\'e3\'d6\'ae\'bc\'e4\'b5\'c4\'be\'e0\'c0\'eb\'a3\'ac\'c7\'b0n\'d0\'d0n\'c1\'d0\'ca\'c7linehaul\'a3\'ac\'ba\'f3\'c3\'e6\'b5\'c4\'d0\'d0\'c1\'d0\'ca\'c7backhaul\par
+        \cf1\b dist_repo:\cf3\b0\'b9\'cb\'bf\'cd\'bd\'da\'b5\'e3\'d3\'eb\'b2\'d6\'bf\'e2\'d6\'ae\'bc\'e4\'b5\'c4\'be\'e0\'c0\'eb\'a3\'ac\'c7\'b0n\'b8\'f6\'ca\'fd\'ca\'c7linehaul\'a3\'ac\'c6\'e4\'cb\'fb\'ca\'c7backhaul\par
+        \cf1\b demandL,demandB:\cf0\b0 linehaul\'ba\'cdbackhaul\'bd\'da\'b5\'e3\'b5\'c4\'bb\'f5\'ce\'ef\'d0\'e8\'c7\'f3\'c1\'bf\par
+        \cf1\b capacity:\cf0\b0\'b3\'b5\'b5\'c4\'c8\'dd\'c4\'c9\'c1\'bf\par
+        \cf1\b reducecost\'a3\'ba\cf0\b0\'d2\'f2\'ce\'aainsertion\'b2\'fa\'c9\'fa\'b5\'c4\'b4\'fa\'bc\'db\'bc\'f5\'c9\'d9\'c1\'bf\par
+   \par
+     (b)\par
+       \'ba\'af\'ca\'fd\'d0\'ce\'ca\'bd\cf2\'a3\'ba\f1\fs20 [newpath1, newpath2, newpath3, reducecost] =\par
+\f0                      \f1  interchange(path1, path2, path3, dist_spot,\par
+\f0                  \f1  \f0     \f1 dist_repo, demandL, demandB, capacity)\par
+\cf3\f0         \fs22\'ba\'af\'ca\'fd\'d7\'f7\'d3\'c3\'a3\'ba \'bd\'abpath1\'ba\'cdpath2\'bb\'f2\'d5\'dfpath3\'b5\'c4\'bd\'da\'b5\'e3\'bd\'f8\'d0\'d0\'bd\'bb\'bb\'bb\par
+       \'b1\'e4\'c1\'bf\'b6\'a8\'d2\'e5\'a3\'ba\par
+          \cf1\b path1,path2,path3:\cf3\b0\'b7\'f9\'bd\'c7\'c9\'cf\'cf\'e0\'c1\'da\'b5\'c4\'c8\'fd\'cc\'f5\'c2\'b7\'be\'b6\par
+          \cf1\b dist_spot:\cf3\b0\'b9\'cb\'bf\'cd\'bd\'da\'b5\'e3\'d6\'ae\'bc\'e4\'b5\'c4\'be\'e0\'c0\'eb\'a3\'ac\'c7\'b0n\'d0\'d0n\'c1\'d0\'ca\'c7linehaul\'a3\'ac\'ba\'f3\'c3\'e6\'b5\'c4\'d0\'d0\'c1\'d0\'ca\'c7\par
+                     backhaul\par
+          \cf1\b dist_repo:\cf3\b0\'b9\'cb\'bf\'cd\'bd\'da\'b5\'e3\'d3\'eb\'b2\'d6\'bf\'e2\'d6\'ae\'bc\'e4\'b5\'c4\'be\'e0\'c0\'eb\'a3\'ac\'c7\'b0n\'b8\'f6\'ca\'fd\'ca\'c7linehaul\'a3\'ac\'c6\'e4\'cb\'fb\'ca\'c7\par
+                      backhaul\par
+          \cf1\b demandL,demandB:\cf0\b0 linehaul\'ba\'cdbackhaul\'bd\'da\'b5\'e3\'b5\'c4\'bb\'f5\'ce\'ef\'d0\'e8\'c7\'f3\'c1\'bf\par
+          \cf1\b capacity:\cf0\b0\'b3\'b5\'b5\'c4\'c8\'dd\'c4\'c9\'c1\'bf\par
+          \cf1\b reducecost\'a3\'ba\cf0\b0\'d2\'f2\'ce\'aainterchange\'b2\'fa\'c9\'fa\'b5\'c4\'b4\'fa\'bc\'db\'bc\'f5\'c9\'d9\'c1\'bf\par
+\par
+9. \'cd\'a8\'d3\'c3\'b5\'c4\'be\'d6\'b2\'bf\'cb\'d1\'cb\'f7\'cb\'e3\'b7\'a8\par
+   \'ba\'af\'ca\'fd\'d0\'ce\'ca\'bd\cf2\'a3\'ba\f1\fs20 [route, reducecost, routedemandL, routedemandB] = \par
+\f0                     \f1 localsearch(dist_repo, dist_spot, demandL, demandB, \f0  \par
+                    \f1 capacity, route)\par
+\cf3\f0    \fs22\'ba\'af\'ca\'fd\'d7\'f7\'d3\'c3\'a3\'ba\'b6\'d4route\'d6\'d0\'b5\'c4\'c2\'b7\'be\'b6\'bd\'f8\'d0\'d0\'bd\'da\'b5\'e3\'bc\'e4\'b5\'c4\'bd\'bb\'bb\'bb/\'c2\'b7\'be\'b6\'bc\'e4\'b5\'c4\'bd\'bb\'bb\'bb\par
+   \'b1\'e4\'c1\'bf\'b6\'a8\'d2\'e5\'a3\'ba \par
+      \cf1\b dist_spot:\cf3\b0\'b9\'cb\'bf\'cd\'bd\'da\'b5\'e3\'d6\'ae\'bc\'e4\'b5\'c4\'be\'e0\'c0\'eb\'a3\'ac\'c7\'b0n\'d0\'d0n\'c1\'d0\'ca\'c7linehaul\'a3\'ac\'ba\'f3\'c3\'e6\'b5\'c4\'d0\'d0\'c1\'d0\'ca\'c7backhaul\par
+      \cf1\b dist_repo:\cf3\b0\'b9\'cb\'bf\'cd\'bd\'da\'b5\'e3\'d3\'eb\'b2\'d6\'bf\'e2\'d6\'ae\'bc\'e4\'b5\'c4\'be\'e0\'c0\'eb\'a3\'ac\'c7\'b0n\'b8\'f6\'ca\'fd\'ca\'c7linehaul\'a3\'ac\'c6\'e4\'cb\'fb\'ca\'c7backhaul\par
+      \cf1\b demandL,demandB:\cf0\b0 linehaul\'ba\'cdbackhaul\'bd\'da\'b5\'e3\'b5\'c4\'bb\'f5\'ce\'ef\'d0\'e8\'c7\'f3\'c1\'bf\par
+      \cf1\b capacity:\cf0\b0\'b3\'b5\'b5\'c4\'c8\'dd\'c4\'c9\'c1\'bf\par
+      \cf1\b reducecost:\cf0\b0\'d2\'f2local search\'b2\'fa\'c9\'fa\'b5\'c4\'b4\'fa\'bc\'db\'bc\'f5\'c9\'d9\'c1\'bf\par
+      \cf1\b route\'a3\'ba\cf0\b0\'d0\'ce\'b2\'ce\'d6\'d0\'ca\'c7\'d4\'ad\'c2\'b7\'be\'b6\'bc\'af\'ba\'cf\'a3\'ac\'b7\'b5\'bb\'d8\'b2\'ce\'ca\'fd\'d6\'d0\'ca\'c7\'d7\'ee\'d6\'d5\'b5\'c4\'c2\'b7\'be\'b6\'bc\'af\'ba\'cf\par
+      \cf1\b routedemandL,routedemandB:\cf0\b0\'d7\'ee\'d6\'d5\'c3\'bf\'cc\'f5\'c2\'b7\'be\'b6\'b5\'c4linehaul\'d0\'e8\'c7\'f3\'c1\'bf\'ba\'cdbackhaul\'d0\'e8\'c7\'f3\'c1\'bf\par
+\f1\par
+\b\i\f0\'a3\'a8iv\'a3\'a9 \'bb\'ad\'cd\'bc\'ba\'af\'ca\'fd\par
+\b0\i0  10. \'bb\'ad\'b7\'d6\'b4\'d8\'c7\'e9\'bf\'f6\'a3\'ba\par
+    \'ba\'af\'ca\'fd\'d0\'ce\'ca\'bd\'a3\'ba\cf2\f1\fs20 drawcluster(cluster, Lx, Ly, Bx, By, linehaulnum, \par
+\f0                        \f1 picturerange)\par
+\cf3\f0     \fs22\'ba\'af\'ca\'fd\'d7\'f7\'d3\'c3\'a3\'ba\'bb\'ad\'b3\'f6\'b7\'d6\'b4\'d8\'c7\'e9\'bf\'f6\f1\fs20\par
+\f0     \fs22\'b1\'e4\'c1\'bf\'b6\'a8\'d2\'e5\'a3\'ba \par
+       \cf1\b cluster:\cf3\b0\'d2\'aa\'bb\'ad\'b5\'c4\'b4\'d8\par
+       \cf1\b Lx,Ly,Bx,By:\cf0\b0 linehaul\'ba\'cdbackhaul\'bd\'da\'b5\'e3\'b5\'c4\'ba\'e1\'d7\'dd\'d7\'f8\'b1\'ea\par
+\cf3        \cf1\b linehaulnum: \cf3\b0 linehaul\'bd\'da\'b5\'e3\'b5\'c4\'ca\'fd\'c1\'bf\par
+       \cf1\b picturerange:\cf3\b0\'d2\'aa\'bb\'ad\'cd\'bc\'b5\'c4\'b7\'b6\'ce\'a7\par
+ 11. \'bb\'ad\'d7\'ee\'d6\'d5\'b5\'c4\'c2\'b7\'be\'b6\par
+    \'ba\'af\'ca\'fd\'d0\'ce\'ca\'bd\'a3\'ba\cf2\f1\fs20 drawfinalroute(path, Lx, Ly, Bx, By, repox, repoy, \par
+\f0                      \f1 picturerange)\fs22\par
+\cf3\f0     \'ba\'af\'ca\'fd\'d7\'f7\'d3\'c3\'a3\'ba\'bb\'ad\'b3\'f6\'d7\'ee\'d6\'d5\'b5\'c4\'c2\'b7\'be\'b6\par
+    \'b1\'e4\'c1\'bf\'b6\'a8\'d2\'e5\'a3\'ba\par
+       \cf1\b path:\cf3\b0\'c2\'b7\'be\'b6\'bc\'af\'ba\'cf\par
+       \cf1\b Lx,Ly,Bx,By:\cf0\b0 linehaul\'ba\'cdbackhaul\'bd\'da\'b5\'e3\'b5\'c4\'ba\'e1\'d7\'dd\'d7\'f8\'b1\'ea\par
+       \cf1\b repox\'a3\'acrepoy:\cf3\b0\'b2\'d6\'bf\'e2\'b5\'c4\'ba\'e1\'a1\'a2\'d7\'dd\'d7\'f8\'b1\'ea\par
+\cf0        \cf1\b picturerange:\cf0\b0\'d2\'aa\'bb\'ad\'cd\'bc\'b5\'c4\'b7\'b6\'ce\'a7\par
+\cf3\par
+\par
+\par
+       \par
+\fs20          \cf0\f1\fs22\par
+\par
+\f0\par
+\f1\fs24\par
+\cf3\f0\fs22\par
+\cf0\par
+              \f1\par
+\cf3\f0\par
+\par
+    \par
+\par
+\par
+\cf0\f1\par
+
+\pard\f0\lang0\par
+}
+ 

@@ -1,4 +1,4 @@
-function [cluster] = autocluster(demand, samplex, sampley, capacity, K, repox, repoy)
+function [cluster] = Anglecluster(demand, samplex, sampley, capacity, K, repox, repoy)
     % 拍脑袋想出来的分簇算法
     % demand: 要分簇的顾客的货物需求
     % samplex, sampley:顾客的x、y坐标

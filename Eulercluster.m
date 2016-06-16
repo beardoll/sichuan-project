@@ -1,4 +1,4 @@
-function [u_final, center] = cluster(center_ini, n, demand, samplex, sampley, cluster_num, capacity, repox, repoy)
+function [u_final, center] = Eulercluster(center_ini, n, demand, samplex, sampley, cluster_num, capacity, repox, repoy)
     % center_ini: 簇首的初始位置
     % demand:各个数据点的货物需求
     % samplex, sampley: 数据点的x，y坐标
@@ -25,8 +25,6 @@ function [u_final, center] = cluster(center_ini, n, demand, samplex, sampley, cl
         end   
         K;
         u_new = FCM_integer(n, datanum, dist,K, capacity, demand);
-%         u_new = FCM_noconstraint(datanum, K, dist);           
-%         u_new = FCM_inner(dist,C,capacity,demand);
         u = u_new;
         newcenter = zeros(K,2);
         for i = 1:K
