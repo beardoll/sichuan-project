@@ -53,6 +53,8 @@ function [totalcost, final_path] = VRPB(dataset, option)
             CH(kk,1) = repox + xdev;
             CH(kk,2) = repoy + ydev;
         end
+        CH
+
 %         
 %         plot([Lx, Bx], [Ly,By],'o');
 %         axis([0 24000 0 32000]);
