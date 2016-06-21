@@ -34,17 +34,15 @@ option.draworigincluster = 0;
 option.drawfinalrouting = 1;
 option.localsearch = 1;
 
+dc = sqrt(12000^2+16000^2)/2;
+[CH] = Candidate2(Lx, Ly, Bx, By, demandL, demandB, carnum(PROID), dc, repox, repoy);
+plot(Lx, Ly, 'go');
+hold on;
+plot(Bx, By, 'r+');
+hold on;
+plot(CH(:,1), CH(:,2), 'b')
 
-% dc = sqrt(12000^2+16000^2)/2;
-% [CH] = Candidate2(Lx, Ly, Bx, By, demandL, demandB, carnum(PROID), dc, repox, repoy);
-% plot(Lx, Ly, 'go');
-% hold on;
-% plot(Bx, By, 'r+');
-% hold on;
-% plot(CH(:,1), CH(:,2), 'b*');
-% hold off;
-
-[totalcost, final_path] = VRPB(dataset, option)
+% [totalcost, final_path] = VRPB(dataset, option)
                 
 % dataset: Lx, Ly, demandL, Bx, By, demandB, capacity, repox, repoy,
 %          regionrange, K

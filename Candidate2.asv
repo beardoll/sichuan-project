@@ -1,7 +1,7 @@
-function [] = Candidate2(Lx, Ly, Bx, By, demandL, demandB, K)
+function [CH] = Candidate2(Lx, Ly, Bx, By, demandL, demandB, K, dc, repox, repoy)
     % 利用幅角距离来初始化簇首位置
-    alpha1 = demandL/K;   % 每个Linehaul簇的平均载重量
-    alpha2 = demandB/K;   % 每个backhaul簇的平均载重量
+    alpha1 = sum(demandL)/K;   % 每个Linehaul簇的平均载重量
+    alpha2 = sum(demandB)/K;   % 每个backhaul簇的平均载重量
     linehaulnum = length(Lx);
     backhaulnum = length(Bx);
     line_angle = computeAngle(Lx, Ly, repox, repoy);   % linehaul节点的幅角
@@ -12,75 +12,128 @@ function [] = Candidate2(Lx, Ly, Bx, By, demandL, demandB, K)
     for i = 1:K
         cluster{i} = [];
     end
-    clusterdL = zeros(1,K);  % 每个簇的linehaul代价
-    clusterdB = zeros(1,K);  % 每个簇的backhaul代价
-    borderspot = zeros(K,2);  % 边界点
-    curcluster = 1;  % 当前要装载节点的簇
     for i = 1:linehaulnum + backhaulnum
         angledist(i,i) = inf;
         for j = i+1:linehaulnum + backhaulnum
-            angledist(i,j) = abs(cus_angle(i) - cus_angle(j));
+            angledist(i,j) = cus_angle(i) - cus_angle(j);  % 正角度表示j的幅角比i的幅角小
+            angledist(j,i) = -angledist(i,j);
         end
-        angledist(j,i) = angledist(i,j);
     end
-    stop = 0
+    m = find(cus_angle == min(cus_angle));
+    n = find(cus_angle == max(cus_angle));
+    angledist(m,n) = 2*pi - max(cus_angle) + min(cus_angle);
+    angledist(n,m) = -angledist(m,n);
+    
+    
+    option = 1:linehaulnum + backhaulnum;
+    choice = option(randi(length(option)));
+    bigcluster = cell(K);
+    k = 1;
+    cluster = [choice];   % 当前簇成员
+    border = [choice, choice];  % 簇的两个边界成员
+    if choice <= linehaulnum
+        dL = demandL(choice);  % 簇内linehaul货物容量
+        dB = 0;  % 簇内backhaul货物容量
+    else
+        dL = 0;
+        dB = demandB(choice - linehaulnum);
+    end
+    stop1 = 0;
+    stop2 = 0;
+    stop = 0;
     while stop == 0
-        mindist = min(min(angledist));
-        minindex = find(angledist == mindist);
-        temp1 = floor(minindex/(linehaulnum+backhaulnum));  % 幅角最小者所在行
-        temp2 = minindex - (temp1-1)*(linehaulnum+backhaulnum); % 幅角最小者所在列
-        if temp2 == 0
-            temp2 = linehaulnum + backhaulnum;
-        end
-        if temp1 <= linehaulnum;
-            d1L = demandL(temp1); % temp1带来的Linehaul负担
-            d1B = 0;              % temp1带来的backhaul负担
+        cdist1 = angledist(border(1),:);
+        cdist2 = angledist(border(2),:);
+        temp1 = find(cdist1 > 0);
+        cdist1(temp1) = -inf;
+        temp2 = find(cdist2 < 0);
+        cdist2(temp2) = inf;
+        min1 = max(cdist1);  
+        min2 = min(cdist2);  
+        if min1 == -inf
+            stop1 = 1;
         else
-            d1L = 0;
-            d1B = demandB(temp1-linehaulnum);
-        end
-        if temp2 <= linehaulnum
-            d2L = demandL(temp2);  % temp2带来的Linehaul负担
-            d2B = 0;               % temp2带来的backhaul负担
-        else
-            d2L = 0;
-            d2B = demandB(temp2-linehaulnum);
-        end 
-        % 下面的计算是为了衡量加入当前节点的货物量后是否超出当前簇的货物量
-        if length(cluster{curcluster}) == 0  % 当前簇还没有成员
-            cluster{curcluster} = [cluster{curcluster}, temp1, temp2];
-            clusterdL(curcluster) = clusterdL(curcluster) + d1L + d2L;
-            clusterdB(curcluster) = clusterdB(curcluster) + d1B + d2B;
-        else
-            cdL = clusterdL(curcluster);
-            cdB = clusterdB(curcluster);
-            if cdL + d1L + d2L > alpha1 || cdB + d1B + d2B > alpha2  % 不合法
-                if temp1 == borderspot(curcluster,1) || temp1 == borderspot(curcluster,2) ...
-                        || temp2 == borderspot(curcluster,1) || temp2 == borderspot(curcluster,2) 
-                    % 这对不合法组合中有一个成员是当前簇的边界成员
-                    angledist(temp1,temp2) = inf;
-                    angledist(temp1,temp1) = inf;
+        neighbor1 = find(angledist(border(1),:) == min1);  % 左边界幅角最小者
+        neighbor1 = neighbor1(1);
+        neighbor2 = find(angledist(border(2),:) == min2);  % 右边界幅角最小者
+        neighbor2 = neighbor2(1);
+        if stop1 == 0
+            angledist(border(1),neighbor1) = inf;
+            angledist(neighbor1,border(1)) = inf;
+            if neighbor1 <= linehaulnum
+                if dL + demandL(neighbor1) <= alpha1
+                    cluster = [cluster, neighbor1];
+                    border(1) = neighbor1;
+                    dL = dL + demandL(neighbor1);
                 else
-                    curcluster = curcluster + 1;
-                    if curcluster > K
-                        curcluster = 1;
-                    end
-                    cluster{curcluster} = [cluster{curcluster}, temp1, temp2];
-                    clusterdL(curcluster) = clusterdL(curcluster) + d1L + d2L;
-                    clusterdB(curcluster) = clusterdB(curcluster) + d1B + d2B;
-                    borderspot(curcluster,1) = temp1;
-                    borderspot(curcluster,2) = temp2;
-                end 
-            else  % 合法
-                cluster{curcluster} = [cluster{curcluster}, temp1, temp2];
-                clusterdL(curcluster) = clusterdL(curcluster) + d1L + d2L;
-                clusterdB(curcluster) = clusterdB(curcluster) + d1B + d2B;
-                if temp1 == borderspot 
-                    
+                    stop1 = 1;
+                end
+            else
+                if dB + demandB(neighbor1-linehaulnum) <= alpha2
+                    cluster = [cluster, neighbor1];
+                    border(1) = neighbor1;
+                    dB = dB + demandB(neighbor1-linehaulnum);
+                else
+                    stop1 = 1;
+                end
             end
-        end                                                    
-        if min(min(angledist)) == inf  % 如果已经查找过所有的节点组合，则算法结束
-            stop = 1;
         end
+        
+        if stop2 == 0 
+            angledist(border(2),neighbor2) = inf;
+            angledist(neighbor2,border(2)) = inf;
+            if neighbor2 <= linehaulnum
+                if dL + demandL(neighbor2) <= alpha1
+                    cluster = [cluster, neighbor2];
+                    border(2) = neighbor2;
+                    dL = dL + demandL(neighbor2);
+                else
+                    stop2 = 1;
+                end
+            else
+                if dB + demandB(neighbor2-linehaulnum) <= alpha2
+                    cluster = [cluster, neighbor2];
+                    border(2) = neighbor2;
+                    dB = dB + demandB(neighbor2-linehaulnum);
+                else
+                    stop2 = 1;
+                end
+            end
+        end
+            
+        
+        if stop1 == 1 && stop2 == 1
+            if k > K
+                stop = 1;
+            else
+                stop1 = 0;
+                stop2 = 0;
+                bigcluster{k} = cluster;
+                option = setdiff(option, cluster);
+                angledist(cluster,:) = inf;  % 簇里面的成员不能再被分到别的簇去
+                angledist(:,cluster) = inf;
+                choice = option(randi(length(option)));
+                cluster = [choice];
+                if choice <= linehaulnum
+                    dL = demandL(choice);
+                    dB = 0;
+                else
+                    dL = 0;
+                    dB = demandB(choice - linehaulnum);
+                end
+                border = [choice, choice];
+                k = k+1;
+            end
+        end            
     end
+    
+    CH = zeros(K,2);
+    for i = 1:K
+        cc = bigcluster{i};
+        sumangle = sum(cus_angle(cc));
+        aveangle = sumangle/length(cc);
+        CH(i,1) = dc*cos(aveangle)+repox;
+        CH(i,2) = dc*sin(aveangle)+repoy;
+    end       
 end
+        

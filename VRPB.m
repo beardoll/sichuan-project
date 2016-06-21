@@ -44,16 +44,17 @@ function [totalcost, final_path] = VRPB(dataset, option)
 %         CH = Candidate(Lx, Ly, Bx, By, xmax, ymax, K);
 %         save('ha','CH');
         
-        CH = zeros(K,2);
-        dp = sqrt(xmax^2+ymax^2)/2;
-        angle = 0:2*pi/K:2*(K-1)*pi/K;
-        for kk = 1:K
-            xdev = dp*cos(angle(kk));
-            ydev = dp*sin(angle(kk));
-            CH(kk,1) = repox + xdev;
-            CH(kk,2) = repoy + ydev;
-        end
-        CH
+%         CH = zeros(K,2);
+%         dp = sqrt(xmax^2+ymax^2)/2;
+%         angle = 0:2*pi/K:2*(K-1)*pi/K;
+%         for kk = 1:K
+%             xdev = dp*cos(angle(kk));
+%             ydev = dp*sin(angle(kk));
+%             CH(kk,1) = repox + xdev;
+%             CH(kk,2) = repoy + ydev;
+%         end
+        dc = sqrt((xmax/2)^2+(ymax/2)^2)/2;
+        [CH] = Candidate2(Lx, Ly, Bx, By, demandL, demandB, K, dc, repox, repoy);
 
 %         
 %         plot([Lx, Bx], [Ly,By],'o');
