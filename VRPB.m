@@ -54,7 +54,7 @@ function [totalcost, final_path] = VRPB(dataset, option)
 %             CH(kk,2) = repoy + ydev;
 %         end
         dc = sqrt((xmax/2)^2+(ymax/2)^2)/2;
-        [CH] = Candidate2(Lx, Ly, Bx, By, demandL, demandB, K, dc, repox, repoy);
+        [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, dc, repox, repoy, capacity);
 
 %         
 %         plot([Lx, Bx], [Ly,By],'o');

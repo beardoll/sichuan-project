@@ -6,9 +6,9 @@ yrange = [0 32000];   % ×Ý×ø±ê·¶Î§
 repox = 12000;        % ²Ö¿âx×ø±ê
 repoy = 16000;        % ²Ö¿ây×ø±ê
 
-E;
-load EPro;
-PROID = 2;
+I;
+load IPro;
+PROID = 5;
 
 % plot([Lx, Bx], [Ly,By],'o');
 % axis([0 24000 0 32000]);
@@ -36,7 +36,7 @@ option.localsearch = 1;
 
 
 % dc = sqrt(12000^2+16000^2)/2;
-% [CH] = Candidate2(Lx, Ly, Bx, By, demandL, demandB, carnum(PROID), dc, repox, repoy);
+% [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, carnum(PROID), dc, repox, repoy, capacity(PROID));
 % plot(Lx, Ly, 'go');
 % hold on;
 % plot(Bx, By, 'r+');
