@@ -22,7 +22,7 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, dc, repox, repoy
     clustermem = [];  % 簇成员
     spotid = -1*ones(1,totalnum);   % 每个顾客节点所在的簇标号
     
-    while length(clustermem) < totalnum
+    while length(clustermem) < totalnum || clusterlen > K
         minangledist = min(min(angledist));  % 当前幅角距离最小者
         minindex = find(angledist == minangledist);
         minindex = minindex(1);
@@ -128,64 +128,62 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, dc, repox, repoy
             end
         end               
     end
-    
-    memlen = zeros(1,clusterlen);
-    for i = 1:clusterlen
-        mem = cluster(i).mem;
-        memlen(i) = length(mem);
-    end
-    
-    memlensort = sort(memlen, 'descend');
-    CH = zeros(K,2);
-    
-    % adjustment
-    % 这样分出的簇数量可能会超过K，所以先挑出最大的K个簇，然后把其余的簇并到这K个簇当中
-    bigcluster = cell(K);
-    border = zeros(K,2);   % 每个大簇边界上的节点
-    smallcluster = cell(clusterlen - K);
-    for i = 1:clusterlen
-        clindex = find(memlen == memlensort(i));
-        clindex = clindex(1);
-        memlen(clindex) = -1;
-        temp = cluster(clindex).mem;
-        if i <= K
-            b1 = find(cus_angle(temp) == min(cus_angle(temp)));
-            b1 = b1(1);
-            b2 = find(cus_angle(temp) == max(cus_angle(temp)));
-            b2 = b2(1);
-            border(i,:) = [b1, b2];
-            bigcluster{i} = temp;
-        else
-            smallcluster{i-K} = temp;
-        end
-    end
-    
-    for j = 1:clusterlen - K
-        smem = smallcluster{j};
-        for k = 1:length(smem)
-            csmem = smem(k);
-            minvalue = inf;
-            choice = -1;
-            for m = 1:K
-                temp = min(angledist(border(m,:), csmem));
-                if temp < minvalue
-                    minvalue = temp;
-                    choice = m;
-                end
-            end
-            bigcluster{choice} = [bigcluster{choice}, csmem];
-        end
-    end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  adjustment  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%     memlen = zeros(1,clusterlen);
+%     for i = 1:clusterlen
+%         mem = cluster(i).mem;
+%         memlen(i) = length(mem);
+%     end
+%     
+%     memlensort = sort(memlen, 'descend');    
+%     % 这样分出的簇数量可能会超过K，所以先挑出最大的K个簇，然后把其余的簇并到这K个簇当中
+%     bigcluster = cell(K);
+%     border = zeros(K,2);   % 每个大簇边界上的节点
+%     smallcluster = cell(clusterlen - K);
+%     for i = 1:clusterlen
+%         clindex = find(memlen == memlensort(i));
+%         clindex = clindex(1);
+%         memlen(clindex) = -1;
+%         temp = cluster(clindex).mem;
+%         if i <= K
+%             b1 = find(cus_angle(temp) == min(cus_angle(temp)));
+%             b1 = b1(1);
+%             b2 = find(cus_angle(temp) == max(cus_angle(temp)));
+%             b2 = b2(1);
+%             border(i,:) = [b1, b2];
+%             bigcluster{i} = temp;
+%         else
+%             smallcluster{i-K} = temp;
+%         end
+%     end
+%     
+%     for j = 1:clusterlen - K
+%         smem = smallcluster{j};
+%         for k = 1:length(smem)
+%             csmem = smem(k);
+%             minvalue = inf;
+%             choice = -1;
+%             for m = 1:K
+%                 temp = min(angledist(border(m,:), csmem));
+%                 if temp < minvalue
+%                     minvalue = temp;
+%                     choice = m;
+%                 end
+%             end
+%             bigcluster{choice} = [bigcluster{choice}, csmem];
+%         end
+%     end
     
                     
     
     
-    
+    CH = zeros(K,2);
     for i = 1:K
-        cc = bigcluster{i};
+        cc = cluster(i).mem;
 %         candidatedraw(cc, Lx, Ly, Bx, By, linehaulnum);
-        temp1 = 0;
         temp2 = 0;
+        temp1 = 0;
         for j = 1:length(cc)
             temp1 = temp1 + cos(cus_angle(cc(j)));
             temp2 = temp2 + sin(cus_angle(cc(j)));

@@ -6,9 +6,9 @@ yrange = [0 32000];   % ×Ý×ø±ê·¶Î§
 repox = 12000;        % ²Ö¿âx×ø±ê
 repoy = 16000;        % ²Ö¿ây×ø±ê
 
-H;
-load HPro;
-PROID = 2;
+G;
+load GPro;
+PROID = 1;
 
 % plot([Lx, Bx], [Ly,By],'o');
 % axis([0 24000 0 32000]);
