@@ -26,7 +26,7 @@ function [u_final, center] = Eulercluster(center_ini, n, demand, samplex, sample
             num = i - (clusterindex-1)*datanum;   % 数据点的位置
             dist(i) = (samplex(num)-center(clusterindex,1))^2+(sampley(num)-center(clusterindex,2))^2 + ...
                 (samplex(num) - repox)^2 + (sampley(num) - repoy)^2 + (center(clusterindex,1) - repox)^2 + ...
-                (center(clusterindex,2) - repoy)^2+100000*abs(cus_angle(num)-CH_angle(clusterindex));
+                (center(clusterindex,2) - repoy)^2+00000*abs(cus_angle(num)-CH_angle(clusterindex));
         end   
         K;
         u_new = FCM_integer(n, datanum, dist,K, capacity, demand);

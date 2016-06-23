@@ -6,9 +6,9 @@ yrange = [0 32000];   % ×Ý×ø±ê·¶Î§
 repox = 12000;        % ²Ö¿âx×ø±ê
 repoy = 16000;        % ²Ö¿ây×ø±ê
 
-I;
-load IPro;
-PROID = 5;
+H;
+load HPro;
+PROID = 2;
 
 % plot([Lx, Bx], [Ly,By],'o');
 % axis([0 24000 0 32000]);
@@ -44,7 +44,7 @@ option.localsearch = 1;
 % plot(CH(:,1), CH(:,2), 'b*');
 % hold off;
 
-[totalcost, final_path] = VRPB(dataset, option)
+[totalcost, final_path, routedemandL, routedemandB] = VRPB(dataset, option)
                 
 % dataset: Lx, Ly, demandL, Bx, By, demandB, capacity, repox, repoy,
 %          regionrange, K

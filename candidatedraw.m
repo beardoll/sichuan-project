@@ -1,4 +1,4 @@
-function [] = candidatedraw(cluster, Lx, Ly, Bx, By, linehaulnum)
+function [] = candidatedraw(cluster, Lx, Ly, Bx, By, linehaulnum, CHx, CHy)
     for i = 1:length(cluster)
         if cluster(i) <= linehaulnum
             plot(Lx(cluster(i)), Ly(cluster(i)), 'ro');
@@ -8,6 +8,7 @@ function [] = candidatedraw(cluster, Lx, Ly, Bx, By, linehaulnum)
             hold on;
         end
     end
-    axis([0 24000 0 32000])
+    plot(CHx, CHy, 'b*');
+    axis([0 24000 0 32000]);
     hold off;
 end

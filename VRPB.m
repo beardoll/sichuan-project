@@ -1,7 +1,7 @@
 % clc;clear;
 % 绝对定位： 比如，1 -- n表示linehaul, n+1 -- m表示backhaul
 % load dataset;
-function [totalcost, final_path] = VRPB(dataset, option)
+function [totalcost, final_path, routedemandL, routedemandB] = VRPB(dataset, option)
     % dataset: Lx, Ly, demandL, Bx, By, demandB, capacity, repox, repoy,
     %          regionrange, colDiv, rowDiv, K
     %          Lx, Ly: linehaul节点的横、纵坐标，Bx,By为backhaul
@@ -221,6 +221,8 @@ function [totalcost, final_path] = VRPB(dataset, option)
 %     save('pp','path', 'dist_spot','dist_repo', 'demandL', 'demandB', 'capacity');
     
     %% local search
+    routedemandL = 0;
+    routedemandB = 0;
     if option.localsearch==1 && option.cluster == 2   % 仅幅角分簇可用的local search
             % path1, path2, path3应当不包括仓库
             % step1: insertion

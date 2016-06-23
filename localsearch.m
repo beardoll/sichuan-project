@@ -36,7 +36,7 @@ function [route, reducecost, routedemandL, routedemandB] = localsearch(dist_repo
     end
 
     maxsc = -1;
-    alpha = 100000;  % 惩罚因子，惩罚超载
+    alpha = 1000;  % 惩罚因子，惩罚超载
     while abs(maxsc) > 10^(-6)
         maxsc = inf;
         for i = 1:K
@@ -65,15 +65,19 @@ function [route, reducecost, routedemandL, routedemandB] = localsearch(dist_repo
                     frdemandB = routedemandB(remainindex(k));   % 要进行交换操作路径的backhaul负担
                     frrestdemandL = sum(frdemandL);
                     frrestdemandB = sum(frdemandB);
-                    for m = 2:frlen - 1
-                        frppos = frroute(m-1);        % 前节点
+                    for m = 1:frlen - 1
+%                         frppos = frroute(m-1);        % 前节点
                         frcpos = frroute(m);          % 当前节点
                         frnpos = frroute(m+1);        % 后继节点
 %                         save('hehe','frroute');
 % %                         frroute
                         if frcpos <= linehaulnum  % frcpos是linehaul节点
-                            frcdemand = demandL(frcpos);
-                            frrestdemandL = frrestdemandL - frcdemand;
+                            if frcpos == 0
+                                frcdemand = 0;
+                            else
+                                frcdemand = demandL(frcpos);
+                                frrestdemandL = frrestdemandL - frcdemand;
+                            end
                         else
                             frcdemand = demandB(frcpos-linehaulnum);
                             frrestdemandB = frrestdemandB - frcdemand;
