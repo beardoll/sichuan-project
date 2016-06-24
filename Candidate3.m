@@ -1,4 +1,4 @@
-function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, dc, repox, repoy, capacity)
+function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, repox, repoy, capacity)
     linehaulnum = length(Lx);        % linehaul节点个数
     totalnum = length([Lx, Bx]);     % 总的节点个数
     line_angle = computeAngle(Lx, Ly, repox, repoy);   % linehaul节点的幅角
@@ -153,8 +153,10 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, dc, repox, repoy
         end
         b1 = find(cus_angle(cmem) >= minangle-epsilon & cus_angle(cmem) <= minangle+epsilon);
         b1 = b1(1);
+        b1 = cmem(b1);
         b2 = find(cus_angle(cmem) >= maxangle-epsilon & cus_angle(cmem) <= maxangle+epsilon);
         b2 = b2(1);
+        b2 = cmem(b2);
         border(i,:) = [b1, b2];
         midangle = anglerange/2; % 中间值
         anglelist = [anglelist, midangle];
@@ -216,10 +218,73 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, dc, repox, repoy
     end
     
     origincluster = newcluster(retaincluster);  % 初始的K个簇
+    origindL = zeros(1,K);
+    origindB = zeros(1,K);
+    % 先把各个簇的容量给统计出来
+    for i = 1:K
+        origindL(i) = newcluster(i).dL;
+        origindB(i) = newcluster(i).dB;
+    end
     
     % 接下来针对origincluster进行调整，使每个簇的货物量不超过车载量
-    
-        
+    while max(originL) > capacity || max(originB) > capacity
+        for i = 1:K   % 往编号大的方向转移(把幅角较大的给转移走)
+            if originL(i) > capacity || originB(i) > capacity  % 有其中一个容量超了                           
+                if i == K
+                    neibor = 1;
+                else
+                    neibor = i+1;
+                end
+                if originL(i) > capacity  
+                    while originL(i) > capacity
+                        cmem = origincluster(i).mem;
+                        cmemL = cmem(find(cmem<=linehaulnum));  % linehaul成员
+                        minangle = min(cus_angle(cmemL));
+                        maxangle = max(cus_angle(cmemL));
+                        if maxangle - minangle > pi  % 簇是跨区的
+                            plusmem = cmemL(find(cus_angle(cmemL) >= 0 & cus_angle(cmemL) < pi));
+                            cchoice = cmemL(find(cus_angle(cmemL) == max(plusmem)));
+                            cchoice = cchoice(1);
+                        else
+                            cchoice = cmemL(find(cus_angle(cmemL) == max(cus_angle(cmemL))));
+                            cchoice = cchoice(1);
+                        end
+                        cdL = demandL(cchoice);
+                        removeL = removeL + cdL;                           
+                        origincluster(i).mem = setdiff(origincluster(i).mem, cchoice);
+                        origincluster(neibor).mem = [origincluster(neibor).mem, choice];
+                        origincluster(neibor).dL = origincluster(neibor).dL + cdL;
+                        origincluster(i).dL = origincluster(i).dL - cdL;
+                        origindL(i) = origindL(i) - cdL;
+                        origindL(neibor) = origindL(neibor) + cdL;
+                    end
+                end
+                if originB(i) > capacity
+                    while originB(i) > capacity
+                        cmem = origincluster(i).mem;
+                        cmemB = cmem(find(cmem>linehaulnum));   % backhaul成员 
+                        minangle = min(cus_angle(cmemB));
+                        maxangle = max(cus_angle(cmemB));
+                        if maxangle - minangle > pi  % 簇是跨区的
+                            plusmem = cmemB(find(cus_angle(cmemB) >= 0 & cus_angle(cmemB) < pi));
+                            cchoice = cmemB(find(cus_angle(cmemB) == max(plusmem)));
+                            cchoice = cchoice(1);
+                        else
+                            cchoice = cmemB(find(cus_angle(cmemB) == max(cus_angle(cmemB))));
+                            cchoice = cchoice(1);
+                        end
+                        cdB = demandB(cchoice-linehaulnum);
+                        origincluster(i).mem = setdiff(origincluster(i).mem, cchoice);
+                        origincluster(i).dB = origincluster(i).dB - cdB; 
+                        origincluster(neibor).mem = [origincluster(neibor).mem, cchoice];
+                        origincluster(neibor).dB = origincluster(neibor).dB + cdB;
+                        origindB(i) = origindB(i) - cdB;
+                        origindB(neibor) = origindB(neibor) + cdB;
+                    end
+                end                        
+            end
+        end
+    end
     
     CH = zeros(K,2);
     for i = 1:K
@@ -228,14 +293,20 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, dc, repox, repoy
         temp2 = 0;
         temp1 = 0;
         for j = 1:length(cc)
-            temp1 = temp1 + cos(cus_angle(cc(j)));
-            temp2 = temp2 + sin(cus_angle(cc(j)));
+            cspot = cc(j);
+            if cspot <= linehaulnum
+                temp1 = temp1 + Lx(cspot);
+                temp2 = temp2 + Ly(cspot);
+            else
+                temp1 = temp1 + Bx(cspot-linehaulnum);
+                temp2 = temp2 + By(cspot-linehaulnum);
+            end
         end
         temp1 = temp1/length(cc);
         temp2 = temp2/length(cc);
-        CH(i,1) = dc*temp1+repox;
-        CH(i,2) = dc*temp2+repoy;
-%         figure(i);
-%         candidatedraw(cc, Lx, Ly, Bx, By, linehaulnum, CH(i,1), CH(i,2));
+        CH(i,1) = temp1;
+        CH(i,2) = temp2;
+        figure(i);
+        candidatedraw(cc, Lx, Ly, Bx, By, linehaulnum, CH(i,1), CH(i,2));
     end      
 end

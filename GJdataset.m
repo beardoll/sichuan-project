@@ -6,9 +6,9 @@ yrange = [0 32000];   % ×Ý×ø±ê·¶Î§
 repox = 12000;        % ²Ö¿âx×ø±ê
 repoy = 16000;        % ²Ö¿ây×ø±ê
 
-N;
-load NPro;
-PROID = 6;
+G;
+load GPro;
+PROID = 4;
 
 % plot([Lx, Bx], [Ly,By],'o');
 % axis([0 24000 0 32000]);
@@ -36,7 +36,7 @@ option.localsearch = 1;
 
 
 % dc = sqrt(12000^2+16000^2)/2;
-% [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, carnum(PROID), dc, repox, repoy, capacity(PROID));
+[CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, carnum(PROID), repox, repoy, capacity(PROID));
 % plot(Lx, Ly, 'go');
 % hold on;
 % plot(Bx, By, 'r+');
@@ -44,8 +44,8 @@ option.localsearch = 1;
 % plot(CH(:,1), CH(:,2), 'b*');
 % hold off;
 
-[totalcost, final_path, routedemandL, routedemandB] = VRPB(dataset, option);
-totalcost
+% [totalcost, final_path, routedemandL, routedemandB] = VRPB(dataset, option);
+% totalcost
                 
 % dataset: Lx, Ly, demandL, Bx, By, demandB, capacity, repox, repoy,
 %          regionrange, K

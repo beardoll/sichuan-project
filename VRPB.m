@@ -39,8 +39,8 @@ function [totalcost, final_path, routedemandL, routedemandB] = VRPB(dataset, opt
 
        %% 对Linehaul和Backhaul进行分簇
         % 初始化簇首
-        xmax = regionrange(2);
-        ymax = regionrange(4);
+%         xmax = regionrange(2);
+%         ymax = regionrange(4);
 %         CH = Candidate(Lx, Ly, Bx, By, xmax, ymax, K);
 %         save('ha','CH');
         
@@ -53,8 +53,10 @@ function [totalcost, final_path, routedemandL, routedemandB] = VRPB(dataset, opt
 %             CH(kk,1) = repox + xdev;
 %             CH(kk,2) = repoy + ydev;
 %         end
-        dc = sqrt((xmax/2)^2+(ymax/2)^2)/2;
-        [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, dc, repox, repoy, capacity);
+%         dc = sqrt((xmax/2)^2+(ymax/2)^2)/2;
+
+
+        [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, repox, repoy, capacity);
 
 %         
 %         plot([Lx, Bx], [Ly,By],'o');
