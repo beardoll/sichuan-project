@@ -66,7 +66,7 @@ function [route, reducecost, routedemandL, routedemandB] = localsearch(dist_repo
                     frrestdemandL = sum(frdemandL);
                     frrestdemandB = sum(frdemandB);
                     for m = 2:frlen - 1
-%                         frppos = frroute(m-1);        % 前节点
+                        frppos = frroute(m-1);        % 前节点
                         frcpos = frroute(m);          % 当前节点
                         frnpos = frroute(m+1);        % 后继节点
 %                         save('hehe','frroute');
@@ -108,8 +108,66 @@ function [route, reducecost, routedemandL, routedemandB] = localsearch(dist_repo
                                                    frdemandL - frrestdemandL + restdemandL, frdemandB - frrestdemandB + restdemandB];
                                     maxsc = csc2; 
                                 end
+                                penalty3 = (max(ordemandL-cdemand+frcdemand-capacity, 0) + ...
+                                           max(frdemandL-frcdemand+cdemand-capacity, 0))*alpha;
+                                csc3 = -D(ppos+1, cpos+1)-D(cpos+1,npos+1)+D(ppos+1,frcpos+1)+D(frcpos+1,npos+1) ...
+                                       -D(frppos+1,frcpos+1)-D(frcpos+1,frnpos+1)+D(frppos+1,cpos+1)+D(cpos+1,frnpos+1)+penalty3;
+                                if csc3 < maxsc
+                                    best.operation = 3;  % interchange
+                                    best.interchangeroute = [i,remainindex(k)];  % 进行交换的两条路径
+                                    best.pos = [cpos, frcpos];      % 进行交换的具体位置，第一个是被交换
+                                    best.demand = [ordemandL - cdemand+frcdemand,ordemandB...
+                                                   frdemandL - frcdemand + cdemand, frdemandB];
+                                    maxsc = csc3; 
+                                end   
                             end
                         elseif cpos > linehaulnum % 要送走的边是backhaul边
+                            if ppos <= linehaulnum  % 接口边,cpos是后端
+                                if frcpos <= linehaulnum  && frnpos > linehaulnum % 接口边前端
+                                    if m > 2 % 不允许把唯一的linehaul节点换走
+                                        penalty3 = (max(ordemandL+frcdemand-capacity, 0) + ...
+                                                   max(frdemandB+cdemand-capacity, 0)) * alpha;
+                                        csc3 = -D(ppos+1, cpos+1)-D(cpos+1,npos+1)+D(ppos+1,frcpos+1)+D(frcpos+1,npos+1) ...
+                                               -D(frppos+1,frcpos+1)-D(frcpos+1,frnpos+1)+D(frppos+1,cpos+1)+D(cpos+1,frnpos+1)+penalty3;
+                                        if csc3 < maxsc
+                                            best.operation = 3;  % interchange
+                                            best.interchangeroute = [i,remainindex(k)];  % 进行交换的两条路径
+                                            best.pos = [cpos, frcpos];      % 进行交换的具体位置，第一个是被交换
+                                            best.demand = [ordemandL + frcdemand,ordemandB-cdemand
+                                                       frdemandL - frcdemand, frdemandB+cdemand];
+                                            maxsc = csc3; 
+                                        end
+                                    end
+                                elseif frcpos > linehaulnum  % 接口边后端或者纯backhaul边
+                                    penalty3 = (max(ordemandB-cdemand+frcdemand-capacity, 0) + ...
+                                                max(frdemandB-frcdemand+cdemand-capacity, 0))*alpha;
+                                    csc3 = -D(ppos+1, cpos+1)-D(cpos+1,npos+1)+D(ppos+1,frcpos+1)+D(frcpos+1,npos+1) ...
+                                           -D(frppos+1,frcpos+1)-D(frcpos+1,frnpos+1)+D(frppos+1,cpos+1)+D(cpos+1,frnpos+1)+penalty3;
+                                    if csc3 < maxsc
+                                        best.operation = 3;  % interchange
+                                        best.interchangeroute = [i,remainindex(k)];  % 进行交换的两条路径
+                                        best.pos = [cpos, frcpos];      % 进行交换的具体位置，第一个是被交换
+                                        best.demand = [ordemandL, ordemandB-cdemand+frcdemand
+                                                       frdemandL, frdemandB-frcdemand+cdemand];
+                                        maxsc = csc3; 
+                                    end
+                                end
+                            else % 纯backhaul边，只能与backhaul边或者接口边后端交换
+                                if frcpos > linehaulnum
+                                    penalty3 = (max(ordemandB-cdemand+frcdemand-capacity, 0) + ...
+                                                max(frdemandB-frcdemand+cdemand-capacity, 0))*alpha;
+                                    csc3 = -D(ppos+1, cpos+1)-D(cpos+1,npos+1)+D(ppos+1,frcpos+1)+D(frcpos+1,npos+1) ...
+                                           -D(frppos+1,frcpos+1)-D(frcpos+1,frnpos+1)+D(frppos+1,cpos+1)+D(cpos+1,frnpos+1)+penalty3;
+                                    if csc3 < maxsc
+                                        best.operation = 3;  % interchange
+                                        best.interchangeroute = [i,remainindex(k)];  % 进行交换的两条路径
+                                        best.pos = [cpos, frcpos];      % 进行交换的具体位置，第一个是被交换
+                                        best.demand = [ordemandL, ordemandB-cdemand+frcdemand
+                                                       frdemandL, frdemandB-frcdemand+cdemand];
+                                        maxsc = csc3; 
+                                    end
+                                end
+                            end
                             if frcpos <= linehaulnum && frnpos <= linehaulnum  % 要插入的原连接边是linehaul边，则不允许
                                 continue;
                             else
@@ -138,7 +196,36 @@ function [route, reducecost, routedemandL, routedemandB] = localsearch(dist_repo
                                     maxsc = csc2; 
                                 end
                             end
-                        elseif  cpos <= linehaulnum && npos > linehaulnum % 要送走的边是接口边
+                        elseif  cpos <= linehaulnum && npos > linehaulnum % 要送走的边是接口边，cpos是接口边的前端
+                            if frcpos <= linehaulnum  % linehaul边或者接口边前端
+                                penalty3 = (max(ordemandL-cdemand+frcdemand-capacity, 0) + ...
+                                           max(frdemandL-frcdemand+cdemand-capacity, 0))*alpha;
+                                csc3 = -D(ppos+1, cpos+1)-D(cpos+1,npos+1)+D(ppos+1,frcpos+1)+D(frcpos+1,npos+1) ...
+                                       -D(frppos+1,frcpos+1)-D(frcpos+1,frnpos+1)+D(frppos+1,cpos+1)+D(cpos+1,frnpos+1)+penalty3;
+                                if csc3 < maxsc
+                                    best.operation = 3;  % interchange
+                                    best.interchangeroute = [i,remainindex(k)];  % 进行交换的两条路径
+                                    best.pos = [cpos, frcpos];      % 进行交换的具体位置，第一个是被交换
+                                    best.demand = [ordemandL - cdemand+frcdemand,ordemandB, ...
+                                                   frdemandL - frcdemand + cdemand, frdemandB];
+                                    maxsc = csc3; 
+                                end     
+                            elseif frcpos > linehaulnum && frppos<=linehaulnum  % 接口边后端
+                                if j>2  % 不允许把路径中最后一个linehaul节点给转移走
+                                    penalty3 = (max(ordemandB+frcdemand-capacity, 0) + ...
+                                                max(frdemandL+cdemand-capacity, 0))*alpha;
+                                    csc3 = -D(ppos+1, cpos+1)-D(cpos+1,npos+1)+D(ppos+1,frcpos+1)+D(frcpos+1,npos+1) ...
+                                           -D(frppos+1,frcpos+1)-D(frcpos+1,frnpos+1)+D(frppos+1,cpos+1)+D(cpos+1,frnpos+1)+penalty3;
+                                    if csc3 < maxsc
+                                        best.operation = 3;  % interchange
+                                        best.interchangeroute = [i,remainindex(k)];  % 进行交换的两条路径
+                                        best.pos = [cpos, frcpos];      % 进行交换的具体位置，第一个是被交换
+                                        best.demand = [ordemandL - cdemand, ordemandB + frcdemand, ... 
+                                                       frdemandL + cdemand, frdemandB - frcdemand];
+                                        maxsc = csc3; 
+                                    end 
+                                end                                                                              
+                            end
                             if frcpos <= linehaulnum && j>2 
                                 % 要插入的原连接边只能是linehaul边或者接口边
                                 % 不允许把路径中最后一个linehaul节点给挖走
@@ -194,7 +281,12 @@ function [route, reducecost, routedemandL, routedemandB] = localsearch(dist_repo
                 newroute1 = [newroute1 r1(1:index1)];
                 newroute1 = [newroute1 r2(index2+1:end)];
                 newroute2 = [newroute2 r2(1:index2)];
-                newroute2 = [newroute2 r1(index1+1:end)];     
+                newroute2 = [newroute2 r1(index1+1:end)];
+            elseif best.operation == 3 % exchange
+                newroute1 = r1;
+                newroute2 = r2;
+                newroute1(index1) = pos2;
+                newroute2(index2) = pos1;
             end
             route{best.interchangeroute(1)} = newroute1;
             route{best.interchangeroute(2)} = newroute2;

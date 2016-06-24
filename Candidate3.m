@@ -227,7 +227,7 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, repox, repoy, ca
     end
     
     % 接下来针对origincluster进行调整，使每个簇的货物量不超过车载量
-    while max(origindL) > capacity || max(origindB) > capacity
+    while max(origindL) > 1.05*capacity || max(origindB) > 1.05*capacity
         for i = 1:K   % 往编号大的方向转移(把幅角较大的给转移走)
             if origindL(i) > capacity || origindB(i) > capacity  % 有其中一个容量超了                           
                 if i == K
@@ -293,9 +293,13 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, repox, repoy, ca
         for j = 1:length(cc)
             cspot = cc(j);
             if cspot <= linehaulnum
+%                 temp1 = temp1 + Lx(cspot);
+%                 temp2 = temp2 + Ly(cspot);
                 temp1 = temp1 + (Lx(cspot)+repox)/2;
                 temp2 = temp2 + (Ly(cspot)+repoy)/2;
             else
+%                 temp1 = temp1 + Bx(cspot-linehaulnum);
+%                 temp2 = temp2 + By(cspot-linehaulnum);
                 temp1 = temp1 + (Bx(cspot-linehaulnum)+repox)/2;
                 temp2 = temp2 + (By(cspot-linehaulnum)+repoy)/2;
             end
