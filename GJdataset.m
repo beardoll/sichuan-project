@@ -6,9 +6,9 @@ yrange = [0 32000];   % ×Ý×ø±ê·¶Î§
 repox = 12000;        % ²Ö¿âx×ø±ê
 repoy = 16000;        % ²Ö¿ây×ø±ê
 
-N;
-load NPro;
-PROID = 6;
+G;
+load GPro;
+PROID = 2;
 
 % plot([Lx, Bx], [Ly,By],'o');
 % axis([0 24000 0 32000]);
@@ -31,7 +31,7 @@ dataset.K = carnum(PROID);
 option.cluster = 1;
 option.drawbigcluster = 0;
 option.draworigincluster = 0;
-option.drawfinalrouting = 0;
+option.drawfinalrouting = 1;
 option.localsearch = 1;
 
 

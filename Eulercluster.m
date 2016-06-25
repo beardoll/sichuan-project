@@ -24,21 +24,21 @@ function [u_final, center] = Eulercluster(center_ini, n, demand, samplex, sample
                 clusterindex = clusterindex - 1;
             end
             num = i - (clusterindex-1)*datanum;   % 数据点的位置
-            dist(i) = (samplex(num)-center(clusterindex,1))^2+(sampley(num)-center(clusterindex,2))^2 + ...
-                (samplex(num) - repox)^2 + (sampley(num) - repoy)^2 + (center(clusterindex,1) - repox)^2 + ...
-                (center(clusterindex,2) - repoy)^2+00000*abs(cus_angle(num)-CH_angle(clusterindex));
 %             dist(i) = (samplex(num)-center(clusterindex,1))^2+(sampley(num)-center(clusterindex,2))^2 + ...
-%                        100000*abs(cus_angle(num)-CH_angle(clusterindex));
-        end   
+%                 (samplex(num) - repox)^2 + (sampley(num) - repoy)^2 + (center(clusterindex,1) - repox)^2 + ...
+%                 (center(clusterindex,2) - repoy)^2+00000*abs(cus_angle(num)-CH_angle(clusterindex));
+            dist(i) = (samplex(num)-center(clusterindex,1))^2+(sampley(num)-center(clusterindex,2))^2 + ...
+                       (20000*abs(cus_angle(num)-CH_angle(clusterindex)))^2;
+        end  
         K;
         u_new = FCM_integer(n, datanum, dist,K, capacity, demand);
         u = u_new;
         newcenter = zeros(K,2);
         for i = 1:K
-            newcenter(i,1) = sum(u((i-1)*datanum+1:i*datanum).*(samplex+repox)/2)/sum(u((i-1)*datanum+1:i*datanum));   % 更新簇首
-            newcenter(i,2) = sum(u((i-1)*datanum+1:i*datanum).*(sampley+repoy)/2)/sum(u((i-1)*datanum+1:i*datanum));
-%             newcenter(i,1) = sum(u((i-1)*datanum+1:i*datanum).*samplex)/sum(u((i-1)*datanum+1:i*datanum));   % 更新簇首
-%             newcenter(i,2) = sum(u((i-1)*datanum+1:i*datanum).*sampley)/sum(u((i-1)*datanum+1:i*datanum));
+%             newcenter(i,1) = sum(u((i-1)*datanum+1:i*datanum).*(samplex+repox)/2)/sum(u((i-1)*datanum+1:i*datanum));   % 更新簇首
+%             newcenter(i,2) = sum(u((i-1)*datanum+1:i*datanum).*(sampley+repoy)/2)/sum(u((i-1)*datanum+1:i*datanum));
+            newcenter(i,1) = sum(u((i-1)*datanum+1:i*datanum).*samplex)/sum(u((i-1)*datanum+1:i*datanum));   % 更新簇首
+            newcenter(i,2) = sum(u((i-1)*datanum+1:i*datanum).*sampley)/sum(u((i-1)*datanum+1:i*datanum));
         end
         gap = sum(sum((center-newcenter).^2));
         center = newcenter;

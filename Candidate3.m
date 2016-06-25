@@ -293,15 +293,15 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, repox, repoy, ca
         for j = 1:length(cc)
             cspot = cc(j);
             if cspot <= linehaulnum
-%                 temp1 = temp1 + Lx(cspot);
-%                 temp2 = temp2 + Ly(cspot);
-                temp1 = temp1 + (Lx(cspot)+repox)/2;
-                temp2 = temp2 + (Ly(cspot)+repoy)/2;
+                temp1 = temp1 + Lx(cspot);
+                temp2 = temp2 + Ly(cspot);
+%                 temp1 = temp1 + (Lx(cspot)+repox)/2;
+%                 temp2 = temp2 + (Ly(cspot)+repoy)/2;
             else
-%                 temp1 = temp1 + Bx(cspot-linehaulnum);
-%                 temp2 = temp2 + By(cspot-linehaulnum);
-                temp1 = temp1 + (Bx(cspot-linehaulnum)+repox)/2;
-                temp2 = temp2 + (By(cspot-linehaulnum)+repoy)/2;
+                temp1 = temp1 + Bx(cspot-linehaulnum);
+                temp2 = temp2 + By(cspot-linehaulnum);
+%                 temp1 = temp1 + (Bx(cspot-linehaulnum)+repox)/2;
+%                 temp2 = temp2 + (By(cspot-linehaulnum)+repoy)/2;
             end
         end
         temp1 = temp1/length(cc);
