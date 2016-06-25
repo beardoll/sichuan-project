@@ -71,6 +71,7 @@ function [totalcost, final_path, routedemandL, routedemandB] = VRPB(dataset, opt
         clusterL = cell(K);
         clusterB = cell(K);
         [u, center] = Eulercluster(CH, linehaulnum, [demandL demandB]', [Lx Bx]', [Ly By]', K, capacity, repox, repoy);
+        u = int8(u);
          for i = 1:K
             memL = find(u((i-1)*totalnum+1:(i-1)*totalnum + linehaulnum)==1);
             clusterL{i} = memL;
@@ -204,7 +205,7 @@ function [totalcost, final_path, routedemandL, routedemandB] = VRPB(dataset, opt
         if memlen == 0   % 空路径
             path{k} = [0 0];
         else
-            save('haha.mat', 'mem','linehaulnum', 'big_cluster','k');
+%             save('haha.mat', 'mem','linehaulnum', 'big_cluster','k');
             linemem = mem(find(mem<=linehaulnum)); % linehaul节点，绝对定位
             cdist_spot = dist_spot(mem, mem);  % 当前顾客节点间的距离
             cdist_repo = dist_repo(mem);       % 当前顾客节点与仓库之间的距离

@@ -260,7 +260,7 @@ function [route, reducecost, routedemandL, routedemandB] = localsearch(dist_repo
             end
         end
 
-        if maxsc < 0
+        if maxsc < 0  % 当前最优交换带来路径代价减少时才执行
             reducecost = reducecost + maxsc;
             r1 = route{best.interchangeroute(1)};
             r2 = route{best.interchangeroute(2)};
@@ -268,7 +268,7 @@ function [route, reducecost, routedemandL, routedemandB] = localsearch(dist_repo
             pos2 = best.pos(2);
             index1 = find(r1 == pos1);
             index2 = find(r2 == pos2);  % 锁定交换的位置
-            if best.operation == 1  % insertion
+            if best.operation == 1  % insertion 
                 newroute1 = r1;
                 newroute1(index1) = [];
                 newroute2 = zeros(1,length(r2)+1);

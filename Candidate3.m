@@ -5,16 +5,13 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, repox, repoy, ca
     back_angle = computeAngle(Bx, By, repox, repoy);   % backhaul节点的幅角
     cus_angle = [line_angle, back_angle];               % 所有顾客节点的幅角
     angledist = zeros(totalnum, totalnum);  % 节点之间的幅角距离
-    copyad = zeros(size(angledist));
     
     for i = 1:totalnum
         angledist(i,i) = inf;
         for j = i+1:totalnum
             minus = cus_angle(i) - cus_angle(j);
-            angledist(i,j) = min(abs(minus), abs(2*pi-abs(minus)));  % 选幅角更小者
+            angledist(i,j) = min(abs(minus), abs(2*pi-abs(minus)));  % 选幅角更小者（不能超过180度）
             angledist(j,i) = angledist(i,j); % 对称性
-            copyad(i,j) = angledist(i,j);
-            copyad(j,i) = copyad(i,j);
         end
     end
     
@@ -25,6 +22,7 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, repox, repoy, ca
     clustermem = [];  % 簇成员
     spotid = -1*ones(1,totalnum);   % 每个顾客节点所在的簇标号
     
+    %% 初步分簇
     while length(clustermem) < totalnum || clusterlen > 2*K
         minangledist = min(min(angledist));  % 当前幅角距离最小者
         minindex = find(angledist == minangledist);
@@ -133,17 +131,17 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, repox, repoy, ca
     end
     
     
-    
+    %% adjustment，将clusterlen个簇变成合法的K个簇
     newcluster = [];   % 对原来的cluster进行位置排序              
     anglelist = [];
-    border = zeros(clusterlen, 2);
+    border = zeros(clusterlen, 2);  % 原来各个cluster的边界
     epsilon = 10^(-4);
     for i = 1:clusterlen   % 求出每个簇的角平分线  
         cmem = cluster(i).mem;
         maxangle = max(cus_angle(cmem));
         minangle = min(cus_angle(cmem));
         anglerange = (maxangle + minangle)/2;
-        if maxangle - minangle > pi  % 在所有的簇中，簇的夹角都不会超过180度
+        if maxangle - minangle > pi  % 在所有的簇中，簇的夹角都不会超过180度，除非是跨一、四象限
             temp1 = cus_angle(cmem);
             temp2 = temp1(find(temp1 >= 0 & temp1 < pi));
             temp3 = temp1(find(temp1 >=pi & temp1 < 2*pi));
@@ -158,7 +156,7 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, repox, repoy, ca
         b2 = b2(1);
         b2 = cmem(b2);
         border(i,:) = [b1, b2];
-        midangle = anglerange/2; % 中间值
+        midangle = anglerange/2; % 中间值，用来对簇进行排序
         anglelist = [anglelist, midangle];
     end
     
@@ -172,8 +170,10 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, repox, repoy, ca
         newcluster = [newcluster, cluster(index)];
     end
     
-    jumpnum = clusterlen - K;  % 跳跃的范围（clusterlen > K）
-    retaincluster = zeros(1,K);
+    jumpnum = clusterlen - K;  
+    % 跳跃的范围（clusterlen > K）
+    % 在newcluster中，每偶数编号的簇会被合并到相邻的基数编号的簇中(有jumpnum个簇会执行这样的操作)
+    retaincluster = zeros(1,K);    % 保留下来的簇编号
     for j = 1:jumpnum
         retaincluster(j) = (j-1)*2+1;
     end
@@ -185,28 +185,28 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, repox, repoy, ca
         index = (i-1)*2+2;
         cmem = newcluster(index).mem;
         if index == 1
-            index1 = clusterlen;
+            index1 = clusterlen;  % 左邻簇
         else
             index1 = index-1;
         end
         if index == clusterlen
-            index2 = 1;
+            index2 = 1;           % 右邻簇
         else
             index2 = index + 1;
         end
         candidate1 = rankborder(index1,:);  % 归入相邻编号的簇
         candidate2 = rankborder(index2,:);
         for m = 1:length(cmem)
-            min1 = min(angledist(candidate1, cmem(m)));
+            min1 = min(angledist(candidate1, cmem(m)));  % min1,min2为当前节点距离相邻簇边界的最短距离
             min2 = min(angledist(candidate2, cmem(m)));
-            if min1 <= min2
+            if min1 <= min2  % 左邻簇更近
                 newcluster(index1).mem = [newcluster(index1).mem, cmem(m)];
                 if cmem(m) <= linehaulnum
                     newcluster(index1).dL = newcluster(index1).dL + demandL(cmem(m));
                 else
                     newcluster(index1).dB = newcluster(index1).dB + demandB(cmem(m)-linehaulnum);
                 end
-            else
+            else  % 右邻簇更近
                 newcluster(index2).mem = [newcluster(index2).mem, cmem(m)];
                 if cmem(m) <= linehaulnum
                     newcluster(index2).dL = newcluster(index2).dL + demandL(cmem(m));
@@ -217,7 +217,8 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, repox, repoy, ca
         end
     end
     
-    origincluster = newcluster(retaincluster);  % 初始的K个簇
+    origincluster = newcluster(retaincluster);  
+    % 原来的clusterlen个簇变成了K个簇，但是每个簇不一定都满足车容量约束
     origindL = zeros(1,K);
     origindB = zeros(1,K);
     % 先把各个簇的容量给统计出来
@@ -227,7 +228,7 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, repox, repoy, ca
     end
     
     % 接下来针对origincluster进行调整，使每个簇的货物量不超过车载量
-    while max(origindL) > 1.05*capacity || max(origindB) > 1.05*capacity
+    while max(origindL) > 1.05*capacity || max(origindB) > 1.05*capacity   % 1.05是一个松弛量，避免出现死循环
         for i = 1:K   % 往编号大的方向转移(把幅角较大的给转移走)
             if origindL(i) > capacity || origindB(i) > capacity  % 有其中一个容量超了                           
                 if i == K
@@ -235,13 +236,13 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, repox, repoy, ca
                 else
                     neibor = i+1;
                 end
-                if origindL(i) > capacity  
+                if origindL(i) > capacity    % 将当前簇的linehaul节点转移走，直到总货物需求低于车载量
                     while origindL(i) > capacity
                         cmem = origincluster(i).mem;
                         cmemL = cmem(find(cmem<=linehaulnum));  % linehaul成员
-                        minangle = min(cus_angle(cmemL));
+                        minangle = min(cus_angle(cmemL));  % 当前簇i的linehaul成员的边界
                         maxangle = max(cus_angle(cmemL));
-                        if maxangle - minangle > pi  % 簇是跨区的
+                        if maxangle - minangle > pi  % 簇是跨区的（选幅角大者，因为往簇编号更大的簇转移）
                             plusmem = cmemL(find(cus_angle(cmemL) >= 0 & cus_angle(cmemL) < pi));
                             cchoice = cmemL(find(cus_angle(cmemL) == max(cus_angle(plusmem))));
                             cchoice = cchoice(1);
@@ -258,13 +259,13 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, repox, repoy, ca
                         origindL(neibor) = origindL(neibor) + cdL;
                     end
                 end
-                if origindB(i) > capacity
+                if origindB(i) > capacity % 将当前簇的backhaul节点转移走，直到总货物需求低于车载量
                     while origindB(i) > capacity
                         cmem = origincluster(i).mem;
                         cmemB = cmem(find(cmem>linehaulnum));   % backhaul成员 
-                        minangle = min(cus_angle(cmemB));
+                        minangle = min(cus_angle(cmemB));  % 当前簇i的backhaul成员的边界
                         maxangle = max(cus_angle(cmemB));
-                        if maxangle - minangle > pi  % 簇是跨区的
+                        if maxangle - minangle > pi  % 簇是跨区的（选幅角大者，因为往簇编号更大的簇转移）
                             plusmem = cmemB(find(cus_angle(cmemB) >= 0 & cus_angle(cmemB) < pi));
                             cchoice = cmemB(find(cus_angle(cmemB) == max(cus_angle(plusmem))));
                             cchoice = cchoice(1);
@@ -285,6 +286,7 @@ function [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, repox, repoy, ca
         end
     end
     
+    % 以origincluster的分簇结果为初始分簇，求解簇心，作为簇首初始值
     CH = zeros(K,2);
     for i = 1:K
         cc = origincluster(i).mem;
