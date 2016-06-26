@@ -1,7 +1,7 @@
 % clc;clear;
 % 绝对定位： 比如，1 -- n表示linehaul, n+1 -- m表示backhaul
 % load dataset;
-function [totalcost, final_path, routedemandL, routedemandB] = VRPB(dataset, option)
+function [totalcost, final_path, routedemandL, routedemandB, alpha] = VRPB(dataset, option)
     % dataset: Lx, Ly, demandL, Bx, By, demandB, capacity, repox, repoy,
     %          regionrange, colDiv, rowDiv, K
     %          Lx, Ly: linehaul节点的横、纵坐标，Bx,By为backhaul
@@ -57,6 +57,8 @@ function [totalcost, final_path, routedemandL, routedemandB] = VRPB(dataset, opt
 
 
         [CH] = Candidate3(Lx, Ly, Bx, By, demandL, demandB, K, repox, repoy, capacity);
+        CH_angle = computeAngle(CH(:,1),CH(:,2),repox,repoy);
+        cus_angle = computeAngle([Lx,Bx], [Ly,By], repox, repoy);
 
 %         
 %         plot([Lx, Bx], [Ly,By],'o');
@@ -68,20 +70,14 @@ function [totalcost, final_path, routedemandL, routedemandB] = VRPB(dataset, opt
 %         hold off;
         
         % 分簇
-        clusterL = cell(K);
-        clusterB = cell(K);
-        [u, center] = Eulercluster(CH, linehaulnum, [demandL demandB]', [Lx Bx]', [Ly By]', K, capacity, repox, repoy);
-        u = int8(u);
-         for i = 1:K
-            memL = find(u((i-1)*totalnum+1:(i-1)*totalnum + linehaulnum)==1);
-            clusterL{i} = memL;
-            memB = find(u((i-1)*totalnum+linehaulnum+1:i*totalnum)==1);
-            clusterB{i} = memB + linehaulnum;            
-         end
-         big_cluster = cell(K);
-         for i = 1:K
-             big_cluster{i} = [clusterL{i};clusterB{i}];
-         end
+        alpha = 20000;
+        [big_cluster] = itercluster(CH, linehaulnum, Lx, Ly, Bx, By, demandL, demandB, K, capacity, repox, repoy, alpha);               
+        [alpha] = compute_alpha(cus_angle, CH_angle, CH, Lx, Ly, Bx, By, K, big_cluster, linehaulnum)
+        [big_cluster] = itercluster(CH, linehaulnum, Lx, Ly, Bx, By, demandL, demandB, K, capacity, repox, repoy, alpha);
+%         [alpha] = compute_alpha(cus_angle, CH_angle, CH, Lx, Ly, Bx, By, K, big_cluster, linehaulnum)
+%         [big_cluster] = itercluster(CH, linehaulnum, Lx, Ly, Bx, By, demandL, demandB, K, capacity, repox, repoy, alpha);
+%         [alpha] = compute_alpha(cus_angle, CH_angle, CH, Lx, Ly, Bx, By, K, big_cluster, linehaulnum)
+%         alpha;
 
         %%%%%%%%%%%%%%%%%%%%%%%% cluster函数相关定义 %%%%%%%%%%%%%%%%%%%%%%%%%%
         % cluster(center_ini, demand, samplex, sampley, cluster_num, capacity)
@@ -255,6 +251,44 @@ function [totalcost, final_path, routedemandL, routedemandB] = VRPB(dataset, opt
         end
         drawfinalroute(path, Lx, Ly, Bx, By, repox, repoy, regionrange);
     end
+end
+
+
+function [big_cluster] = itercluster(CH, linehaulnum, Lx, Ly, Bx, By, demandL, demandB, K, capacity, repox, repoy, alpha)
+    clusterL = cell(K);
+    clusterB = cell(K);
+    [u, center] = Eulercluster(CH, linehaulnum, [demandL demandB]', [Lx Bx]', [Ly By]', K, capacity, repox, repoy, alpha);
+    u = int8(u);
+    totalnum = length([Lx, Bx]);
+     for i = 1:K
+        memL = find(u((i-1)*totalnum+1:(i-1)*totalnum + linehaulnum)==1);
+        clusterL{i} = memL;
+        memB = find(u((i-1)*totalnum+linehaulnum+1:i*totalnum)==1);
+        clusterB{i} = memB + linehaulnum;            
+     end
+     big_cluster = cell(K);
+     for i = 1:K
+         big_cluster{i} = [clusterL{i};clusterB{i}];
+     end
+end
+
+function [alpha] = compute_alpha(cus_angle, CH_angle, CH, Lx, Ly, Bx, By, K, big_cluster, linehaulnum)
+    sumdist1 = 0;
+    sumdist2 = 0;
+    for i = 1:K
+        cmem = big_cluster{i};
+        for j = 1:length(cmem)
+            cspot = cmem(j);
+            if cspot <= linehaulnum
+                sumdist1 = sumdist1 + (Lx(cspot)-CH(i,1))^2 + (Ly(cspot)-CH(i,2))^2;
+            else
+                sumdist1 = sumdist1 + (Bx(cspot-linehaulnum)-CH(i,1))^2 + (By(cspot-linehaulnum)-CH(i,2))^2;
+            end
+            minus = cus_angle(cspot) - CH_angle(i);
+            sumdist2 = sumdist2 + min(abs(minus),2*pi-abs(minus))^2;
+        end
+    end
+    alpha = sqrt(sumdist1/sumdist2);
 end
 
 

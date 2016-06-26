@@ -1,4 +1,4 @@
-function [u_final, center] = Eulercluster(center_ini, n, demand, samplex, sampley, cluster_num, capacity, repox, repoy)
+function [u_final, center] = Eulercluster(center_ini, n, demand, samplex, sampley, cluster_num, capacity, repox, repoy, alpha)
     % center_ini: 簇首的初始位置
     % demand:各个数据点的货物需求
     % samplex, sampley: 数据点的x，y坐标
@@ -16,7 +16,6 @@ function [u_final, center] = Eulercluster(center_ini, n, demand, samplex, sample
         CH_angle = computeAngle(center(:,1),center(:,2),repox,repoy);
         cus_angle = computeAngle(samplex, sampley, repox, repoy);
         
-        
         dist = zeros(datanum*K,1);   % 各数据点到簇心的距离
         for i = 1:length(dist)
             clusterindex = floor(i/datanum)+1;  % 当前簇首编号
@@ -27,8 +26,10 @@ function [u_final, center] = Eulercluster(center_ini, n, demand, samplex, sample
 %             dist(i) = (samplex(num)-center(clusterindex,1))^2+(sampley(num)-center(clusterindex,2))^2 + ...
 %                 (samplex(num) - repox)^2 + (sampley(num) - repoy)^2 + (center(clusterindex,1) - repox)^2 + ...
 %                 (center(clusterindex,2) - repoy)^2+00000*abs(cus_angle(num)-CH_angle(clusterindex));
+            minus = cus_angle(num) - CH_angle(clusterindex);
+            temp = min(abs(minus),abs(2*pi-abs(minus)));
             dist(i) = (samplex(num)-center(clusterindex,1))^2+(sampley(num)-center(clusterindex,2))^2 + ...
-                       (0000*abs(cus_angle(num)-CH_angle(clusterindex)))^2;
+                       (alpha*temp)^2;
         end  
         K;
         u_new = FCM_integer(n, datanum, dist,K, capacity, demand);
