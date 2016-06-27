@@ -10,6 +10,10 @@ function [u_final, center] = Eulercluster(center_ini, n, demand, samplex, sample
     epsilon = 10^(-4);
     gap = 1;
     center = center_ini;   
+    para = zeros(K,2);
+    for i = 1:K
+        para(i,:) = polyfit([repox, center(i,1)],[repoy, center(i,2)],1);
+    end
     
     while gap > epsilon 
         
@@ -26,6 +30,7 @@ function [u_final, center] = Eulercluster(center_ini, n, demand, samplex, sample
 %             dist(i) = (samplex(num)-center(clusterindex,1))^2+(sampley(num)-center(clusterindex,2))^2 + ...
 %                 (samplex(num) - repox)^2 + (sampley(num) - repoy)^2 + (center(clusterindex,1) - repox)^2 + ...
 %                 (center(clusterindex,2) - repoy)^2+00000*abs(cus_angle(num)-CH_angle(clusterindex));
+
             minus = cus_angle(num) - CH_angle(clusterindex);
             temp = min(abs(minus),abs(2*pi-abs(minus)));
             dist(i) = (samplex(num)-center(clusterindex,1))^2+(sampley(num)-center(clusterindex,2))^2 + ...

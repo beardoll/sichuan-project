@@ -70,13 +70,13 @@ function [totalcost, final_path, routedemandL, routedemandB, alpha] = VRPB(datas
 %         hold off;
         
         % 分簇
-        alpha = 20000;
+        alpha = 0000;
         [big_cluster] = itercluster(CH, linehaulnum, Lx, Ly, Bx, By, demandL, demandB, K, capacity, repox, repoy, alpha);               
-        [alpha] = compute_alpha(cus_angle, CH_angle, CH, Lx, Ly, Bx, By, K, big_cluster, linehaulnum)
+        [alpha] = compute_alpha(cus_angle, CH_angle, CH, Lx, Ly, Bx, By, K, big_cluster, linehaulnum, repox, repoy);
         [big_cluster] = itercluster(CH, linehaulnum, Lx, Ly, Bx, By, demandL, demandB, K, capacity, repox, repoy, alpha);
-%         [alpha] = compute_alpha(cus_angle, CH_angle, CH, Lx, Ly, Bx, By, K, big_cluster, linehaulnum)
+%         [alpha] = compute_alpha(cus_angle, CH_angle, CH, Lx, Ly, Bx, By, K, big_cluster, linehaulnum, repox, repoy)
 %         [big_cluster] = itercluster(CH, linehaulnum, Lx, Ly, Bx, By, demandL, demandB, K, capacity, repox, repoy, alpha);
-%         [alpha] = compute_alpha(cus_angle, CH_angle, CH, Lx, Ly, Bx, By, K, big_cluster, linehaulnum)
+%         [alpha] = compute_alpha(cus_angle, CH_angle, CH, Lx, Ly, Bx, By, K, big_cluster, linehaulnum, repox, repoy)
 %         alpha;
 
         %%%%%%%%%%%%%%%%%%%%%%%% cluster函数相关定义 %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -255,6 +255,7 @@ end
 
 
 function [big_cluster] = itercluster(CH, linehaulnum, Lx, Ly, Bx, By, demandL, demandB, K, capacity, repox, repoy, alpha)
+    % 根据幅角惩罚项alpha求解分簇结果
     clusterL = cell(K);
     clusterB = cell(K);
     [u, center] = Eulercluster(CH, linehaulnum, [demandL demandB]', [Lx Bx]', [Ly By]', K, capacity, repox, repoy, alpha);
@@ -272,23 +273,30 @@ function [big_cluster] = itercluster(CH, linehaulnum, Lx, Ly, Bx, By, demandL, d
      end
 end
 
-function [alpha] = compute_alpha(cus_angle, CH_angle, CH, Lx, Ly, Bx, By, K, big_cluster, linehaulnum)
-    sumdist1 = 0;
-    sumdist2 = 0;
+function [alpha] = compute_alpha(cus_angle, CH_angle, CH, Lx, Ly, Bx, By, K, big_cluster, linehaulnum, repox, repoy)
+    % 根据分簇结果big_cluster求解alpha
+    alpha = 0;
     for i = 1:K
+        alpha1 = 0;
         cmem = big_cluster{i};
         for j = 1:length(cmem)
             cspot = cmem(j);
             if cspot <= linehaulnum
-                sumdist1 = sumdist1 + (Lx(cspot)-CH(i,1))^2 + (Ly(cspot)-CH(i,2))^2;
+                    dist1 = sqrt((Lx(cspot) - repox)^2 + (Ly(cspot)-repoy)^2);
+                    dist2 = sqrt((Lx(cspot) - CH(i,1))^2 + (Ly(cspot)-CH(i,2))^2);
             else
-                sumdist1 = sumdist1 + (Bx(cspot-linehaulnum)-CH(i,1))^2 + (By(cspot-linehaulnum)-CH(i,2))^2;
+                  dist1 = sqrt((Bx(cspot-linehaulnum)-repox)^2 + (By(cspot-linehaulnum)-repoy)^2);
+                  dist2 = sqrt((Bx(cspot-linehaulnum)-CH(i,1))^2 + (By(cspot-linehaulnum)-CH(i,2))^2);
             end
             minus = cus_angle(cspot) - CH_angle(i);
-            sumdist2 = sumdist2 + min(abs(minus),2*pi-abs(minus))^2;
+            angle = min(abs(minus),2*pi-abs(minus));
+            alpha1 = alpha1 + dist2/angle;
         end
+        alpha = alpha + alpha1/length(cmem);
     end
-    alpha = sqrt(sumdist1/sumdist2);
+    alpha = 3/7*alpha/K;
+
+%     alpha = sqrt(sumdist1/sumdist2);
 end
 
 
