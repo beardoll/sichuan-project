@@ -70,9 +70,11 @@ function [totalcost, final_path, routedemandL, routedemandB, alpha] = VRPB(datas
 %         hold off;
         
         % 分簇
-        alpha = 0000;
+        alpha = 0000;  % alpha初始值
+        % 求解alpha
         [big_cluster] = itercluster(CH, linehaulnum, Lx, Ly, Bx, By, demandL, demandB, K, capacity, repox, repoy, alpha);               
         [alpha] = compute_alpha(cus_angle, CH_angle, CH, Lx, Ly, Bx, By, K, big_cluster, linehaulnum, repox, repoy);
+        % 将alpha带入求解最终分簇结果
         [big_cluster] = itercluster(CH, linehaulnum, Lx, Ly, Bx, By, demandL, demandB, K, capacity, repox, repoy, alpha);
 %         [alpha] = compute_alpha(cus_angle, CH_angle, CH, Lx, Ly, Bx, By, K, big_cluster, linehaulnum, repox, repoy)
 %         [big_cluster] = itercluster(CH, linehaulnum, Lx, Ly, Bx, By, demandL, demandB, K, capacity, repox, repoy, alpha);
@@ -275,9 +277,10 @@ end
 
 function [alpha] = compute_alpha(cus_angle, CH_angle, CH, Lx, Ly, Bx, By, K, big_cluster, linehaulnum, repox, repoy)
     % 根据分簇结果big_cluster求解alpha
-    alpha = 0;
+    % 欧式距离之和除以幅角距离之和
+    sum1 = 0;  % 欧式距离之和
+    sum2 = 0;  % 幅角距离之和
     for i = 1:K
-        alpha1 = 0;
         cmem = big_cluster{i};
         for j = 1:length(cmem)
             cspot = cmem(j);
@@ -290,11 +293,11 @@ function [alpha] = compute_alpha(cus_angle, CH_angle, CH, Lx, Ly, Bx, By, K, big
             end
             minus = cus_angle(cspot) - CH_angle(i);
             angle = min(abs(minus),2*pi-abs(minus));
-            alpha1 = alpha1 + dist2/angle;
+            sum1 = sum1 + dist2;
+            sum2 = sum2 + angle;
         end
-        alpha = alpha + alpha1/length(cmem);
     end
-    alpha = 3/7*alpha/K;
+    alpha = sum1/sum2;
 
 %     alpha = sqrt(sumdist1/sumdist2);
 end
